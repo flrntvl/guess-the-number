@@ -7,6 +7,8 @@ LANGUAGES = {
     ask_name: 'What is your name?',
     select_difficulty: 'Select a difficulty level: (easy, medium, hard)',
     thinking: 'I\'m thinking of a number between %s and %s. Can you guess it?',
+    ask_guess: 'Your guess: ',
+    invalid_guess: 'Please enter a valid number.',
     too_low: 'Too low! Try again.',
     too_high: 'Too high! Try again.',
     win: 'Congratulations! You\'ve guessed the number in %s attempts!',
@@ -20,11 +22,13 @@ LANGUAGES = {
     ask_name: 'Quel est votre nom ?',
     select_difficulty: 'Choisissez un niveau : (easy, medium, hard)',
     thinking: 'Je pense à un nombre entre %s et %s. Devinez !',
+    ask_guess: 'Votre réponse : ',
+    invalid_guess: 'Veuillez entrer un nombre valide.',
     too_low: 'Trop bas ! Réessayez.',
     too_high: 'Trop haut ! Réessayez.',
     win: 'Bravo ! Vous avez trouvé en %s tentatives !',
     lose: 'Désolé, vous avez utilisé %s tentatives. Le nombre était %s.',
     leaderboard: '🏆 Classement :',
-    leaderboard_header: "#{'#'.ljust(4)}#{'Joueur'.ljust(12)}#{'Tentatives'.ljust(12)}Niveau"
+    leaderboard_header: "#{'#'.ljust(4)}#{'Joueur'.ljust(12)}#{'Tentatives'.ljust(10)}Niveau"
   }
 }.freeze

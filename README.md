@@ -19,6 +19,10 @@ ruby guess.rb
 - After each guess, the game tells you if you went too low or too high
 - Find the number before running out of attempts to win
 
+## Data
+
+Game results are saved in `data/results.json`. This folder is ignored by git — only `data/.gitkeep` is tracked to preserve the directory structure.
+
 ## Roadmap
 
 This project is built step by step to learn Ruby:
@@ -28,4 +32,4 @@ This project is built step by step to learn Ruby:
 - [x] **Multilingual support** — nested `Hash`, language selection
 - [x] **Score saving** — `File`, `JSON`
 - [x] **Leaderboard** — `sort_by`, `select`, formatted display
-- [ ] **Refactor with classes** — `Game`, `Player`, `ScoreBoard`
+- [x] **Refactor with classes** — `Game`, `Player`, `ScoreBoard`
