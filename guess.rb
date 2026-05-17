@@ -6,6 +6,8 @@ require_relative 'lib/messages'
 require_relative 'lib/score_board'
 
 cli = CLI.new
+cli.setup
+
 difficulty = cli.select_difficulty
 player = cli.create_player
 

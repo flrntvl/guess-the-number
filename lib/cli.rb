@@ -5,9 +5,8 @@ require_relative 'messages'
 require_relative 'player'
 
 class CLI
-  def initialize
+  def setup
     welcome
-
     @language = select_language
   end
 
