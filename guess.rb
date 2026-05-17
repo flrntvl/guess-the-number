@@ -65,6 +65,7 @@ game_result = {
   player_name: player_name,
   difficulty: difficulty,
   attempts: attempts,
+  language: language,
   number_to_guess: number_to_guess,
   success: guess == number_to_guess,
   timestamp: Time.now
@@ -78,3 +79,20 @@ end
 results_file << game_result
 
 File.write('results.json', JSON.pretty_generate(results_file))
+
+results = JSON.parse(File.read('results.json'), symbolize_names: true)
+
+leaderboard = results.select { |r| r[:success] && r[:difficulty] == difficulty.to_s }
+                     .sort_by { |r| [r[:attempts], r[:timestamp]] }
+                     .first(5)
+
+puts LANGUAGES[language][:leaderboard]
+puts '─' * 35
+puts LANGUAGES[language][:leaderboard_header]
+puts '─' * 35
+
+leaderboard.each_with_index do |score, index|
+  puts "#{(index + 1).to_s.ljust(4)}#{score[:player_name].ljust(12)}#{score[:attempts].to_s.ljust(10)}#{score[:difficulty]}"
+end
+
+puts '─' * 35
