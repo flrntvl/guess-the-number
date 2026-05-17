@@ -23,7 +23,7 @@ ruby guess.rb
 
 This project is built step by step to learn Ruby:
 
-- [ ] **Basic game** — `gets`, `rand`, `while`, `if/else`
+- [x] **Basic game** — `gets`, `rand`, `while`, `if/else`
 - [ ] **Difficulty levels** — menu, `Hash`, `Symbol`
 - [ ] **Multilingual support** — nested `Hash`, language selection
 - [ ] **Score saving** — `File`, `JSON`
