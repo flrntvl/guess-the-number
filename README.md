@@ -26,6 +26,6 @@ This project is built step by step to learn Ruby:
 - [x] **Basic game** — `gets`, `rand`, `while`, `if/else`
 - [x] **Difficulty levels** — menu, `Hash`, `Symbol`
 - [x] **Multilingual support** — nested `Hash`, language selection
-- [ ] **Score saving** — `File`, `JSON`
+- [x] **Score saving** — `File`, `JSON`
 - [ ] **Leaderboard** — `sort_by`, `select`, formatted display
 - [ ] **Refactor with classes** — `Game`, `Player`, `ScoreBoard`

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'json'
 require_relative 'messages'
 
 DIFFICULTY_LEVELS = {
@@ -16,6 +17,10 @@ until LANGUAGES.key?(language)
   puts LANGUAGES[:en][:select_language]
   language = gets.chomp.downcase.to_sym
 end
+
+puts LANGUAGES[language][:ask_name]
+
+player_name = gets.chomp
 
 difficulty = nil
 
@@ -55,3 +60,21 @@ if guess == number_to_guess
 else
   puts format(LANGUAGES[language][:lose], max_attempts, number_to_guess)
 end
+
+game_result = {
+  player_name: player_name,
+  difficulty: difficulty,
+  attempts: attempts,
+  number_to_guess: number_to_guess,
+  success: guess == number_to_guess,
+  timestamp: Time.now
+}.freeze
+
+results_file = begin
+  JSON.parse(File.read('results.json'))
+rescue StandardError
+  []
+end
+results_file << game_result
+
+File.write('results.json', JSON.pretty_generate(results_file))
