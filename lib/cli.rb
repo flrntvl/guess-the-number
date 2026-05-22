@@ -5,6 +5,7 @@ require_relative 'messages'
 require_relative 'player'
 
 class CLI
+  # Sets up the CLI — defines @language [Symbol] e.g. :en, :fr
   def setup
     welcome
     @language = select_language
@@ -22,6 +23,7 @@ class CLI
     language
   end
 
+  # @return [Symbol] e.g. :easy, :medium, :hard
   def select_difficulty
     difficulty = nil
 
@@ -33,6 +35,7 @@ class CLI
     difficulty
   end
 
+  # @return [Player] instance of Player with the entered name and @language
   def create_player
     puts LANGUAGES[@language][:ask_name]
     name = gets.chomp

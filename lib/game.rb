@@ -5,6 +5,7 @@ require_relative 'messages'
 
 class Game
   # @param difficulty [Symbol] e.g. :easy, :medium, :hard
+  # @param player [Player] instance of Player, provides name and language
   def initialize(difficulty, player)
     @difficulty = difficulty
     @guess = nil
@@ -28,6 +29,7 @@ class Game
     display_result
   end
 
+  # @return [Hash] game result, ready to be saved by ScoreBoard
   def to_result
     {
       player_name: @player_name,

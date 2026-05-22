@@ -14,6 +14,8 @@ class ScoreBoard
     File.write(RESULTS_FILE, JSON.pretty_generate(scores))
   end
 
+  # @param difficulty [Symbol] e.g. :easy, :medium, :hard
+  # @param language [Symbol] e.g. :en, :fr
   def display(difficulty, language)
     results = load_scores
 
@@ -30,6 +32,8 @@ class ScoreBoard
 
   private
 
+  # @return [Array<Hash{Symbol => Object}>] results with Symbol keys (e.g. r[:player_name])
+  # symbolize_names: true converts JSON string keys to Symbols on parse
   def load_scores
     if File.exist?(RESULTS_FILE)
       JSON.parse(File.read(RESULTS_FILE), symbolize_names: true)
@@ -38,6 +42,9 @@ class ScoreBoard
     end
   end
 
+  # @param results [Array<Hash{Symbol => Object}>] Hashes with Symbol keys from load_scores
+  # @param difficulty [Symbol] e.g. :easy, :medium, :hard
+  # @return [Array<Hash{Symbol => Object}>] top 5 wins for the given difficulty
   def filter_and_sort(results, difficulty)
     results.select { |r| r[:success] && r[:difficulty] == difficulty.to_s }
            .sort_by { |r| [r[:attempts], r[:timestamp]] }
