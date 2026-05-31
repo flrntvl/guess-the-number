@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
-require_relative 'messages'
+require_relative 'translations'
 
 class ScoreBoard
   TABLE_WIDTH = 35

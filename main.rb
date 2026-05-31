@@ -2,7 +2,7 @@
 
 require_relative 'lib/game_session'
 require_relative 'lib/game'
-require_relative 'lib/messages'
+require_relative 'lib/translations'
 require_relative 'lib/score_board'
 
 difficulty, player = GameSession.new.run

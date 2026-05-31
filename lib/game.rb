@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'constants'
-require_relative 'messages'
+require_relative 'difficulty'
+require_relative 'translations'
 
 class Game
   # @param difficulty [Symbol] e.g. :easy, :medium, :hard

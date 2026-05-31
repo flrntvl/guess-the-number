@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'constants'
-require_relative 'messages'
+require_relative 'difficulty'
+require_relative 'translations'
 require_relative 'player'
 
 # Coordinates the flow of a game session: language, player setup, and game orchestration.

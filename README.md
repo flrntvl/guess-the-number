@@ -69,7 +69,7 @@ main.rb
             └─ ScoreBoard  →  saves result, shows leaderboard
 ```
 
-Constants and messages live in `lib/constants.rb` and `lib/messages.rb` to keep the classes free of hardcoded values.
+Difficulty settings (ranges, attempt limits) live in `lib/difficulty.rb` and translated strings in `lib/translations.rb` to keep the classes free of hardcoded values.
 
 ## Roadmap
 
