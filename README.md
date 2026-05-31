@@ -14,10 +14,12 @@ ruby main.rb
 
 ## How to play
 
-- The game picks a secret number between 1 and 100
-- You have 10 attempts to guess it
+- The game picks a secret number in a range that depends on the difficulty level
+- The number of attempts also varies by difficulty
 - After each guess, the game tells you if you went too low or too high
 - Find the number before running out of attempts to win
+- After each game, you are asked if you want to play again
+- The leaderboard is displayed once you choose to stop playing
 
 ## Data
 
@@ -51,25 +53,31 @@ Each entry corresponds to one completed game (win or loss):
 
 ## Architecture
 
-The project is split into small classes, each with a single responsibility:
+The project is split into small classes and modules, each with a single responsibility:
 
 | Class | File | Role |
 |---|---|---|
-| `GameSession` | `lib/game_session.rb` | Entry point — collects language, difficulty and player name, then hands off to `Game` |
+| `Translation` | `lib/translations.rb` | Stores all translated strings; `select_language` is called from `main.rb` to pick the locale before the session starts |
+| `GameSession` | `lib/game_session.rb` | Orchestrates the session: collects player name and difficulty, runs the game loop, handles play again |
 | `Game` | `lib/game.rb` | Runs one game: picks a secret number, handles the guess loop, displays feedback |
-| `Player` | `lib/player.rb` | Holds the player's name and language |
+| `Player` | `lib/player.rb` | Holds the player's name |
 | `ScoreBoard` | `lib/score_board.rb` | Saves results to `data/results.json` and displays the leaderboard |
 
 **Flow:**
 
 ```
-main.rb
-  └─ GameSession  →  selects language, difficulty, player
-       └─ Game         →  runs the game loop
-            └─ ScoreBoard  →  saves result, shows leaderboard
+main.rb  →  Translation.select_language   (picks locale)
+         →  GameSession
+              └─ create_player            (asks name)
+              └─ loop:                                  ←┐
+                   └─ select_difficulty                  │
+                   └─ Game  →  runs the game loop        │
+                        └─ ScoreBoard.save               │
+                   └─ play again?  →  yes: repeat loop   ┘
+                                   →  no:  ScoreBoard.display (leaderboard)
 ```
 
-Difficulty settings (ranges, attempt limits) live in `lib/difficulty.rb` and translated strings in `lib/translations.rb` to keep the classes free of hardcoded values.
+Difficulty settings (ranges, attempt limits) live in `lib/difficulty.rb`.
 
 ## Roadmap
 
