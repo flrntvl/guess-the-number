@@ -4,12 +4,18 @@ require_relative 'constants'
 require_relative 'messages'
 require_relative 'player'
 
-class CLI
-  # Sets up the CLI — defines @language [Symbol] e.g. :en, :fr
-  def setup
+# Coordinates the flow of a game session: language, player setup, and game orchestration.
+class GameSession
+  # @return [Array(Symbol, Player)] difficulty and player, ready to init Game
+  def run
     welcome
     @language = select_language
+    difficulty = select_difficulty
+    player = create_player
+    [difficulty, player]
   end
+
+  private
 
   # @return [Symbol] e.g. :en, :fr
   def select_language
@@ -41,8 +47,6 @@ class CLI
     name = gets.chomp
     Player.new(name, @language)
   end
-
-  private
 
   def welcome
     puts LANGUAGES[:en][:welcome]

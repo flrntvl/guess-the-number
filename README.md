@@ -9,7 +9,7 @@ A simple number guessing CLI game built with Ruby — made as a learning project
 ## How to run
 
 ```bash
-ruby guess.rb
+ruby main.rb
 ```
 
 ## How to play
@@ -48,6 +48,28 @@ Each entry corresponds to one completed game (win or loss):
 | `number_to_guess` | Integer | The secret number |
 | `success` | Boolean | `true` if the player found the number |
 | `timestamp` | String | Date and time of the game |
+
+## Architecture
+
+The project is split into small classes, each with a single responsibility:
+
+| Class | File | Role |
+|---|---|---|
+| `GameSession` | `lib/game_session.rb` | Entry point — collects language, difficulty and player name, then hands off to `Game` |
+| `Game` | `lib/game.rb` | Runs one game: picks a secret number, handles the guess loop, displays feedback |
+| `Player` | `lib/player.rb` | Holds the player's name and language |
+| `ScoreBoard` | `lib/score_board.rb` | Saves results to `data/results.json` and displays the leaderboard |
+
+**Flow:**
+
+```
+main.rb
+  └─ GameSession  →  selects language, difficulty, player
+       └─ Game         →  runs the game loop
+            └─ ScoreBoard  →  saves result, shows leaderboard
+```
+
+Constants and messages live in `lib/constants.rb` and `lib/messages.rb` to keep the classes free of hardcoded values.
 
 ## Roadmap
 

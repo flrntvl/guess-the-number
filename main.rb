@@ -1,15 +1,11 @@
 # frozen_string_literal: true
 
-require_relative 'lib/cli'
+require_relative 'lib/game_session'
 require_relative 'lib/game'
 require_relative 'lib/messages'
 require_relative 'lib/score_board'
 
-cli = CLI.new
-cli.setup
-
-difficulty = cli.select_difficulty
-player = cli.create_player
+difficulty, player = GameSession.new.run
 
 game = Game.new(difficulty, player)
 game.play
