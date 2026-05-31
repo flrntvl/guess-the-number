@@ -5,7 +5,7 @@ require_relative 'translations'
 
 class Game
   # @param difficulty [Symbol] e.g. :easy, :medium, :hard
-  # @param player [Player] instance of Player, provides name and language
+  # @param player [Player] instance of Player, provides name
   def initialize(difficulty, player)
     @difficulty = difficulty
     @guess = nil
@@ -14,7 +14,6 @@ class Game
     @range = DIFFICULTY_LEVELS[difficulty][:range]
     @number_to_guess = generate_number
     @player_name = player.name
-    @language = player.language
   end
 
   def play
@@ -35,7 +34,7 @@ class Game
       player_name: @player_name,
       difficulty: @difficulty,
       attempts: @attempts,
-      language: @language,
+      language: Translation.locale,
       number_to_guess: @number_to_guess,
       success: @guess == @number_to_guess,
       timestamp: Time.now
@@ -49,16 +48,16 @@ class Game
   end
 
   def announce_range
-    puts format(LANGUAGES[@language][:thinking], @range.first, @range.last)
+    puts format(Translation.t(:thinking), @range.first, @range.last)
   end
 
   def ask_guess
     loop do
-      print LANGUAGES[@language][:ask_guess]
+      print Translation.t(:ask_guess)
       input = gets.chomp
       return input.to_i if input.match?(/\A-?\d+\z/)
 
-      puts LANGUAGES[@language][:invalid_guess]
+      puts Translation.t(:invalid_guess)
     end
   end
 
@@ -66,17 +65,17 @@ class Game
     return unless @attempts < @max_attempts
 
     if @guess < @number_to_guess
-      puts LANGUAGES[@language][:too_low]
+      puts Translation.t(:too_low)
     elsif @guess > @number_to_guess
-      puts LANGUAGES[@language][:too_high]
+      puts Translation.t(:too_high)
     end
   end
 
   def display_result
     if @guess == @number_to_guess
-      puts format(LANGUAGES[@language][:win], @attempts)
+      puts format(Translation.t(:win), @attempts)
     else
-      puts format(LANGUAGES[@language][:lose], @max_attempts, @number_to_guess)
+      puts format(Translation.t(:lose), @max_attempts, @number_to_guess)
     end
   end
 end
