@@ -4,7 +4,10 @@ A simple number guessing CLI game built with Ruby — made as a learning project
 
 ## Prerequisites
 
-- Ruby 4.0+
+Choose one of the two installation methods below.
+
+- **Manual**: Ruby 4.0+
+- **Docker**: Docker and Docker Compose
 
 ## Project structure
 
@@ -18,15 +21,46 @@ guess-the-number/
 │   └── scoreboard.rb
 ├── data/
 │   └── .gitkeep
+├── Dockerfile
+├── compose.yaml
+├── Makefile
+├── Gemfile
+├── Gemfile.lock
 ├── .gitignore
 └── README.md
 ```
 
 ## How to run
 
+### Manually
+
 ```bash
 ruby bin/guess
 ```
+
+### With Docker
+
+```bash
+make build
+make up
+```
+
+Without `make`, the equivalent commands are:
+
+```bash
+docker compose build
+docker compose run --rm guess
+```
+
+## Tests
+
+```bash
+make test
+```
+
+Without `make`: `docker compose run --rm guess bundle exec rspec`, or `bundle exec rspec` if installed manually.
+
+The test suite (in `spec/`) was generated with the help of AI.
 
 ## How to play
 
@@ -70,7 +104,7 @@ Each entry corresponds to one completed game (win or loss):
 
 This project is built step by step to learn Ruby:
 
-- [ ] **Basic game** — `gets`, `rand`, `while`, `if/else`
+- [x] **Basic game** — `gets`, `rand`, `while`, `if/else`
 - [ ] **Difficulty levels** — menu, `Hash`, `Symbol`
 - [ ] **Multilingual support** — nested `Hash`, language selection
 - [ ] **Score saving** — `File`, `JSON`
