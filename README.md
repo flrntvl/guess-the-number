@@ -1,5 +1,7 @@
 # Guess the Number
 
+[![Tests](https://github.com/flrntvl/guess-the-number/actions/workflows/tests.yml/badge.svg)](https://github.com/flrntvl/guess-the-number/actions/workflows/tests.yml)
+
 A simple number guessing CLI game built with Ruby — made as a learning project to progressively explore core Ruby concepts.
 
 ## Prerequisites
@@ -13,6 +15,9 @@ Choose one of the two installation methods below.
 
 ```
 guess-the-number/
+├── .github/
+│   └── workflows/
+│       └── tests.yml
 ├── bin/
 │   └── guess
 ├── lib/
@@ -61,6 +66,8 @@ make test
 Without `make`: `docker compose run --rm guess bundle exec rspec`, or `bundle exec rspec` if installed manually.
 
 The test suite (in `spec/`) was generated with the help of AI.
+
+Tests run automatically on every push and pull request via [GitHub Actions](.github/workflows/tests.yml).
 
 ## How to play
 
