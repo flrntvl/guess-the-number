@@ -1,0 +1,29 @@
+name: Ruby
+
+# When this workflow runs: on every push to main,
+# and on every pull request targeting main
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# The workflow only needs to read the repo's code, nothing else
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest # virtual machine provided by GitHub to run the job
+
+    steps:
+    - uses: actions/checkout@v4 # checks out the repo's code onto the machine
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1 # official action that installs Ruby
+      with:
+        ruby-version: '4.0'   # same version as the Dockerfile (ruby:4.0.6-alpine)
+        bundler-cache: true   # installs gems (bundle install) and caches them for future runs
+
+    - name: Run tests
+      run: bundle exec rspec  # runs the test suite, same as locally
