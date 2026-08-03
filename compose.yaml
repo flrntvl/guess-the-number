@@ -5,3 +5,6 @@ services:
     tty: true
     volumes:
       - ./data:/app/data
+      - ./lib:/app/lib
+      - ./spec:/app/spec
+      - ./bin:/app/bin

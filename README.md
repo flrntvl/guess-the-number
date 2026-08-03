@@ -105,7 +105,7 @@ Each entry corresponds to one completed game (win or loss):
 This project is built step by step to learn Ruby:
 
 - [x] **Basic game** — `gets`, `rand`, `while`, `if/else`
-- [ ] **Difficulty levels** — menu, `Hash`, `Symbol`
+- [x] **Difficulty levels** — menu, `Hash`, `Symbol`
 - [ ] **Multilingual support** — nested `Hash`, language selection
 - [ ] **Score saving** — `File`, `JSON`
 - [ ] **Leaderboard** — `sort_by`, `select`, formatted display
