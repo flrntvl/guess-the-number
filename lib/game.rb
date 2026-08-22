@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'end_of_input'
+require_relative 'console_input'
 require_relative 'i18n'
 require_relative 'language_selector'
 require_relative 'leaderboard_presenter'
@@ -9,6 +9,8 @@ require_relative 'scoreboard'
 
 # Runs a number guessing game: main menu, difficulty selection, guessing loop and result display.
 class Game
+  include ConsoleInput
+
   DIFFICULTIES = {
     easy: { range: (1..50), max_attempts: 20 },
     medium: { range: (1..100), max_attempts: 15 },
@@ -58,15 +60,6 @@ class Game
 
   def t(key, **params)
     @i18n.t(key, **params)
-  end
-
-  # Reads console input, replacing invalid byte sequences.
-  # Raises EndOfInput when standard input is closed (gets returns nil).
-  def read_input
-    input = gets
-    raise EndOfInput if input.nil?
-
-    input.chomp.scrub.strip
   end
 
   # Asks for the next action in the main menu.

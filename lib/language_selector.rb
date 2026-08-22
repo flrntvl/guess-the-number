@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
-require_relative 'end_of_input'
+require_relative 'console_input'
 require_relative 'i18n'
 
 # Asks the player to choose the game language from console input.
 class LanguageSelector
+  include ConsoleInput
+
   def select
     loop do
       puts 'Choose your language / Choisissez votre langue :'
@@ -19,15 +21,6 @@ class LanguageSelector
   end
 
   private
-
-  # Reads console input, replacing invalid byte sequences.
-  # Raises EndOfInput when standard input is closed (gets returns nil).
-  def read_input
-    input = gets
-    raise EndOfInput if input.nil?
-
-    input.chomp.scrub.strip
-  end
 
   # Resolves the raw player input (menu number, language code or name)
   # into a language symbol, or nil when it matches nothing.
