@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require_relative 'i18n'
+require_relative 'language_selector'
+
+# Runs a number guessing game: difficulty selection, guessing loop and result display.
 class Game
   DIFFICULTIES = {
     easy: { range: (1..50), max_attempts: 20 },
@@ -7,7 +11,12 @@ class Game
     hard: { range: (1..500), max_attempts: 10 }
   }.freeze
 
+  def initialize(language_selector: LanguageSelector.new)
+    @language_selector = language_selector
+  end
+
   def start
+    @i18n = I18n.new(@language_selector.select)
     difficulty = ask_difficulty
     @range = DIFFICULTIES[difficulty][:range]
     @max_attempts = DIFFICULTIES[difficulty][:max_attempts]
@@ -36,6 +45,10 @@ class Game
 
   private
 
+  def t(key, **params)
+    @i18n.t(key, **params)
+  end
+
   def ask_difficulty
     loop do
       display_difficulty_menu
@@ -43,23 +56,28 @@ class Game
       difficulty = resolve_difficulty(gets.chomp.strip.downcase)
       return difficulty if difficulty
 
-      puts 'Please enter a valid choice.'
+      puts t(:invalid_difficulty)
     end
   end
 
   def display_difficulty_menu
-    puts 'Choose a difficulty level (enter its number or its name):'
+    puts t(:difficulty_menu)
     DIFFICULTIES.each_with_index do |(name, settings), index|
-      puts "  #{index + 1}. #{name.capitalize} (1-#{settings[:range].last}, #{settings[:max_attempts]} attempts)"
+      translated_name = t(:"difficulty_#{name}")
+      puts "  #{index + 1}. #{translated_name} (1-#{settings[:range].last}, #{settings[:max_attempts]} #{t(:attempts_word)})"
     end
   end
 
+  # Resolves the raw player input (menu number or difficulty name)
+  # into a difficulty symbol, or nil when it matches nothing.
   def resolve_difficulty(input)
+    # Menu number: "1" selects the first difficulty in the list.
     if input.match?(/\A\d+\z/)
       index = input.to_i - 1
       return DIFFICULTIES.keys[index] if index >= 0
     end
 
+    # Difficulty name ("easy"), case-insensitive.
     input.to_sym if DIFFICULTIES.key?(input.to_sym)
   end
 
@@ -68,20 +86,20 @@ class Game
   end
 
   def display_welcome
-    puts "Guess the number between #{@range.first} and #{@range.last}!"
+    puts t(:welcome, min: @range.first, max: @range.last)
   end
 
   def ask_guess
     loop do
-      print "Your guess (#{@range.first}-#{@range.last}): "
+      print t(:guess_prompt, min: @range.first, max: @range.last)
       input = gets.chomp
 
-      next puts 'Please enter a valid number.' unless input.match?(/\A-?\d+\z/)
+      next puts t(:invalid_number) unless input.match?(/\A-?\d+\z/)
 
       guess = input.to_i
       return guess if @range.include?(guess)
 
-      puts "Please enter a number between #{@range.first} and #{@range.last}."
+      puts t(:out_of_range, min: @range.first, max: @range.last)
     end
   end
 
@@ -90,18 +108,18 @@ class Game
   end
 
   def display_hint(guess, number)
-    puts guess < number ? 'Too low!' : 'Too high!'
+    puts guess < number ? t(:too_low) : t(:too_high)
   end
 
   def display_remaining_attempts(attempts)
-    puts "Attempts remaining: #{@max_attempts - attempts}"
+    puts t(:remaining_attempts, count: @max_attempts - attempts)
   end
 
   def display_win(attempts)
-    puts "You found it in #{attempts} attempts!"
+    puts t(:win, attempts: attempts)
   end
 
   def display_loss(number)
-    puts "Game over! The number was #{number}."
+    puts t(:loss, number: number)
   end
 end

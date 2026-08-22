@@ -1,14 +1,18 @@
 # frozen_string_literal: true
 
 require 'game'
+require 'language_selector'
 
 RSpec.describe Game do
-  subject(:game) { described_class.new }
+  let(:language_selector) { instance_double(LanguageSelector, select: :en) }
 
-  def play(number:, guesses:, difficulty: 'medium')
+  subject(:game) { described_class.new(language_selector: language_selector) }
+
+  def play(number:, guesses:, difficulty: 'medium', language: :en)
     allow(game).to receive(:rand).and_return(number)
     inputs = [difficulty, *guesses].map { |value| "#{value}\n" }
     allow(game).to receive(:gets).and_return(*inputs)
+    allow(language_selector).to receive(:select).and_return(language)
   end
 
   describe '#start' do
@@ -57,6 +61,33 @@ RSpec.describe Game do
         play(number: 42, guesses: [101, 42])
 
         expect { game.start }.to output(/Please enter a number between 1 and 100\./).to_stdout
+      end
+    end
+
+    context 'in French' do
+      it 'gives a "too low" hint when the guess is below the number' do
+        play(number: 42, guesses: [10, 42], language: :fr)
+
+        expect { game.start }.to output(/Trop petit !/).to_stdout
+      end
+
+      it 'gives a "too high" hint when the guess is above the number' do
+        play(number: 42, guesses: [80, 42], language: :fr)
+
+        expect { game.start }.to output(/Trop grand !/).to_stdout
+      end
+
+      it 'declares victory in French when the guess is correct' do
+        play(number: 42, guesses: [42], language: :fr)
+
+        expect { game.start }.to output(/Vous avez trouvé en 1 tentative\(s\) !/).to_stdout
+      end
+
+      it 'declares defeat in French after exhausting all attempts' do
+        max_attempts = Game::DIFFICULTIES[:medium][:max_attempts]
+        play(number: 42, guesses: Array.new(max_attempts, 10), language: :fr)
+
+        expect { game.start }.to output(/Perdu ! Le nombre était 42\./).to_stdout
       end
     end
 
