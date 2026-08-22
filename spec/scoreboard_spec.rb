@@ -23,22 +23,22 @@ RSpec.describe Scoreboard do
   describe '#top' do
     it 'returns only winning results sorted by attempts' do
       write_results([
-        { player_name: 'Slow', difficulty: 'medium', attempts: 9, success: true },
-        { player_name: 'Fast', difficulty: 'medium', attempts: 3, success: true },
-        { player_name: 'Loser', difficulty: 'medium', attempts: 1, success: false }
-      ])
+                      { player_name: 'Slow', difficulty: 'medium', attempts: 9, success: true },
+                      { player_name: 'Fast', difficulty: 'medium', attempts: 3, success: true },
+                      { player_name: 'Loser', difficulty: 'medium', attempts: 1, success: false }
+                    ])
 
       expect(scoreboard.top(:medium)).to eq([
-        { player_name: 'Fast', difficulty: 'medium', attempts: 3, success: true },
-        { player_name: 'Slow', difficulty: 'medium', attempts: 9, success: true }
-      ])
+                                              { player_name: 'Fast', difficulty: 'medium', attempts: 3, success: true },
+                                              { player_name: 'Slow', difficulty: 'medium', attempts: 9, success: true }
+                                            ])
     end
 
     it 'filters by difficulty' do
       write_results([
-        { player_name: 'Easy winner', difficulty: 'easy', attempts: 2, success: true },
-        { player_name: 'Hard winner', difficulty: 'hard', attempts: 2, success: true }
-      ])
+                      { player_name: 'Easy winner', difficulty: 'easy', attempts: 2, success: true },
+                      { player_name: 'Hard winner', difficulty: 'hard', attempts: 2, success: true }
+                    ])
 
       expect(scoreboard.top(:hard).map { |entry| entry[:player_name] }).to eq(['Hard winner'])
     end
@@ -90,7 +90,7 @@ RSpec.describe Scoreboard do
     it 'pretty-prints the JSON' do
       scoreboard.save(player_name: 'Alice')
 
-      expect(File.read(file_path)).to include("  \"player_name\": \"Alice\"")
+      expect(File.read(file_path)).to include('  "player_name": "Alice"')
     end
   end
 end

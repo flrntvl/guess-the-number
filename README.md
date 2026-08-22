@@ -21,12 +21,22 @@ guess-the-number/
 ├── bin/
 │   └── guess
 ├── lib/
+│   ├── console_input.rb
+│   ├── end_of_input.rb
 │   ├── game.rb
 │   ├── i18n.rb
 │   ├── language_selector.rb
 │   ├── leaderboard_presenter.rb
 │   ├── player.rb
 │   └── scoreboard.rb
+├── spec/
+│   ├── game_spec.rb
+│   ├── i18n_spec.rb
+│   ├── language_selector_spec.rb
+│   ├── leaderboard_presenter_spec.rb
+│   ├── player_spec.rb
+│   ├── scoreboard_spec.rb
+│   └── spec_helper.rb
 ├── data/
 │   └── .gitkeep
 ├── Dockerfile
@@ -35,6 +45,7 @@ guess-the-number/
 ├── Gemfile
 ├── Gemfile.lock
 ├── .gitignore
+├── .rubocop.yml
 └── README.md
 ```
 
@@ -71,6 +82,26 @@ Without `make`: `docker compose run --rm guess bundle exec rspec`, or `bundle ex
 The test suite (in `spec/`) was generated with the help of AI.
 
 Tests run automatically on every push and pull request via [GitHub Actions](.github/workflows/tests.yml).
+
+Running the suite also generates a test coverage report with [SimpleCov](https://github.com/simplecov-ruby/simplecov) in `coverage/index.html`.
+
+## Lint
+
+Code style is checked with [RuboCop](https://rubocop.org) (plus [rubocop-rspec](https://github.com/rubocop/rubocop-rspec) for the specs), configured in `.rubocop.yml`:
+
+```bash
+make lint
+```
+
+Without `make`: `docker compose run --rm guess bundle exec rubocop`, or `bundle exec rubocop` if installed manually.
+
+Most style offenses can be fixed automatically:
+
+```bash
+docker compose run --rm guess bundle exec rubocop -a
+```
+
+The linter also runs in CI, before the tests.
 
 ## How to play
 

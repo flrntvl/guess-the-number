@@ -8,3 +8,4 @@ services:
       - ./lib:/app/lib
       - ./spec:/app/spec
       - ./bin:/app/bin
+      - ./coverage:/app/coverage

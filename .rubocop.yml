@@ -1,0 +1,39 @@
+# frozen_string_literal: true
+
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 4.0
+  NewCops: enable
+  SuggestExtensions: false
+
+# Test suites legitimately group many examples in a single block.
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+
+# TODO: tighten back after extracting the guessing loop from Game into its own class.
+Metrics/AbcSize:
+  Max: 24
+
+Metrics/ClassLength:
+  Max: 200
+
+Metrics/MethodLength:
+  Max: 30
+
+# TODO: remove once the Game specs stop stubbing the subject directly (see roadmap).
+RSpec/SubjectStub:
+  Enabled: false
+
+# Specs commonly assert an output and a mock interaction in the same example.
+RSpec/MultipleExpectations:
+  Max: 2
+
+RSpec/ExampleLength:
+  Max: 12
+
+Metrics/ParameterLists:
+  Exclude:
+    - 'spec/**/*'

@@ -169,7 +169,8 @@ class Game
     puts t(:difficulty_menu)
     DIFFICULTIES.each_with_index do |(name, settings), index|
       translated_name = t(:"difficulty_#{name}")
-      puts "  #{index + 1}. #{translated_name} (1-#{settings[:range].last}, #{settings[:max_attempts]} #{t(:attempts_word)})"
+      range_max = settings[:range].last
+      puts "  #{index + 1}. #{translated_name} (1-#{range_max}, #{settings[:max_attempts]} #{t(:attempts_word)})"
     end
   end
 

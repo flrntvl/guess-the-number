@@ -14,9 +14,11 @@ RSpec.describe LeaderboardPresenter do
   describe '#display' do
     it 'displays ranked rows for each difficulty section' do
       allow(scoreboard).to receive(:top).with(:medium).and_return([
-        { player_name: 'Alice', difficulty: 'medium', attempts: 4 },
-        { player_name: 'Bob', difficulty: 'medium', attempts: 7 }
-      ])
+                                                                    { player_name: 'Alice', difficulty: 'medium',
+                                                                      attempts: 4 },
+                                                                    { player_name: 'Bob', difficulty: 'medium',
+                                                                      attempts: 7 }
+                                                                  ])
 
       expect { presenter.display }.to output(
         a_string_matching(/Top scores — Medium/)
@@ -33,8 +35,9 @@ RSpec.describe LeaderboardPresenter do
 
     it 'displays translated sections in French' do
       allow(scoreboard).to receive(:top).with(:medium).and_return([
-        { player_name: 'Alice', difficulty: 'medium', attempts: 4 }
-      ])
+                                                                    { player_name: 'Alice', difficulty: 'medium',
+                                                                      attempts: 4 }
+                                                                  ])
       french_presenter = described_class.new(I18n.new(:fr), scoreboard, %i[medium])
 
       expect { french_presenter.display }.to output(

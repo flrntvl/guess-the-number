@@ -5,10 +5,10 @@ require 'language_selector'
 require 'scoreboard'
 
 RSpec.describe Game do
+  subject(:game) { described_class.new(language_selector: language_selector, scoreboard: scoreboard) }
+
   let(:language_selector) { instance_double(LanguageSelector, select: :en) }
   let(:scoreboard) { instance_double(Scoreboard, save: nil, top: []) }
-
-  subject(:game) { described_class.new(language_selector: language_selector, scoreboard: scoreboard) }
 
   def play(number:, guesses:, difficulty: 'medium', language: :en, name: 'Alice', action: '1')
     allow(game).to receive(:rand).and_return(number)
@@ -19,7 +19,7 @@ RSpec.describe Game do
   end
 
   describe '#start' do
-    context 'guessing the number' do
+    context 'when guessing the number' do
       it 'declares victory when the guess is correct' do
         play(number: 42, guesses: [42])
 
@@ -67,7 +67,7 @@ RSpec.describe Game do
       end
     end
 
-    context 'in French' do
+    context 'when playing in French' do
       it 'gives a "too low" hint when the guess is below the number' do
         play(number: 42, guesses: [10, 42], language: :fr)
 
@@ -144,7 +144,7 @@ RSpec.describe Game do
       it 'exits gracefully before the language is chosen' do
         allow(language_selector).to receive(:select).and_raise(EndOfInput)
 
-        expect { game.start }.to output(/Goodbye \/ Au revoir !/).to_stdout
+        expect { game.start }.to output(%r{Goodbye / Au revoir !}).to_stdout
       end
 
       it 'says goodbye on a normal quit' do

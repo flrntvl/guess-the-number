@@ -25,5 +25,8 @@ jobs:
         ruby-version: '4.0'   # same version as the Dockerfile (ruby:4.0.6-alpine)
         bundler-cache: true   # installs gems (bundle install) and caches them for future runs
 
+    - name: Run linter
+      run: bundle exec rubocop  # checks code style, fails the job on offenses
+
     - name: Run tests
       run: bundle exec rspec  # runs the test suite, same as locally
