@@ -29,7 +29,8 @@ class I18n
       leaderboard_title: 'Top scores — %<difficulty>s',
       no_scores: 'No scores yet.',
       win: 'You found it in %<attempts>d attempts!',
-      loss: 'Game over! The number was %<number>d.'
+      loss: 'Game over! The number was %<number>d.',
+      goodbye: 'Goodbye!'
     },
     fr: {
       difficulty_menu: 'Choisissez un niveau de difficulté (son numéro ou son nom) :',
@@ -57,7 +58,8 @@ class I18n
       leaderboard_title: 'Meilleurs scores — %<difficulty>s',
       no_scores: 'Aucun score pour le moment.',
       win: 'Vous avez trouvé en %<attempts>d tentative(s) !',
-      loss: 'Perdu ! Le nombre était %<number>d.'
+      loss: 'Perdu ! Le nombre était %<number>d.',
+      goodbye: 'Au revoir !'
     }
   }.freeze
 

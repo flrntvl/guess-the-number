@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'end_of_input'
 require_relative 'i18n'
 require_relative 'language_selector'
 require_relative 'leaderboard_presenter'
@@ -29,6 +30,20 @@ class Game
     puts
     puts '=== Guess the Number ==='
     puts
+
+    main_menu_loop
+    puts
+    puts t(:goodbye)
+  rescue EndOfInput
+    # Standard input closed (e.g. Ctrl+D): exit gracefully.
+    puts
+    puts @i18n ? t(:goodbye) : 'Goodbye / Au revoir !'
+  end
+
+  private
+
+  # Runs the main menu loop until the player quits.
+  def main_menu_loop
     @i18n = I18n.new(@language_selector.select)
     @presenter = LeaderboardPresenter.new(@i18n, @scoreboard, DIFFICULTIES.keys)
 
@@ -41,15 +56,17 @@ class Game
     end
   end
 
-  private
-
   def t(key, **params)
     @i18n.t(key, **params)
   end
 
   # Reads console input, replacing invalid byte sequences.
+  # Raises EndOfInput when standard input is closed (gets returns nil).
   def read_input
-    gets.chomp.scrub.strip
+    input = gets
+    raise EndOfInput if input.nil?
+
+    input.chomp.scrub.strip
   end
 
   # Asks for the next action in the main menu.
@@ -57,7 +74,7 @@ class Game
     loop do
       display_main_menu
       print t(:choice_prompt)
-      action = resolve_main_action(gets.chomp.strip.downcase)
+      action = resolve_main_action(read_input.downcase)
       return action if action
 
       puts t(:invalid_action)

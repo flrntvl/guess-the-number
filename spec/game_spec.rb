@@ -127,6 +127,33 @@ RSpec.describe Game do
       end
     end
 
+    context 'when standard input ends (EOF)' do
+      it 'exits gracefully at the main menu prompt' do
+        allow(game).to receive(:gets).and_return(nil)
+
+        expect { game.start }.to output(/Goodbye!/).to_stdout
+      end
+
+      it 'exits gracefully in the middle of a round' do
+        allow(game).to receive(:rand).and_return(42)
+        allow(game).to receive(:gets).and_return("1\n", "Alice\n", nil)
+
+        expect { game.start }.to output(/Goodbye!/).to_stdout
+      end
+
+      it 'exits gracefully before the language is chosen' do
+        allow(language_selector).to receive(:select).and_raise(EndOfInput)
+
+        expect { game.start }.to output(/Goodbye \/ Au revoir !/).to_stdout
+      end
+
+      it 'says goodbye on a normal quit' do
+        allow(game).to receive(:gets).and_return("quit\n")
+
+        expect { game.start }.to output(/Goodbye!/).to_stdout
+      end
+    end
+
     context 'with score saving' do
       before do
         allow(Time).to receive(:now).and_return(Time.new(2026, 5, 22, 10, 30, 0, '+02:00'))

@@ -62,5 +62,11 @@ RSpec.describe LanguageSelector do
 
       expect { selector.select }.to output(/Invalid choice \/ Choix invalide\./).to_stdout
     end
+
+    it 'raises EndOfInput when standard input closes' do
+      allow(selector).to receive(:gets).and_return(nil)
+
+      expect { selector.select }.to raise_error(EndOfInput)
+    end
   end
 end
