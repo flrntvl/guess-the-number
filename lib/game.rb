@@ -2,6 +2,8 @@
 
 require_relative 'i18n'
 require_relative 'language_selector'
+require_relative 'player'
+require_relative 'scoreboard'
 
 # Runs a number guessing game: difficulty selection, guessing loop and result display.
 class Game
@@ -11,18 +13,23 @@ class Game
     hard: { range: (1..500), max_attempts: 10 }
   }.freeze
 
-  def initialize(language_selector: LanguageSelector.new)
+  def initialize(language_selector: LanguageSelector.new, scoreboard: Scoreboard.new)
     @language_selector = language_selector
+    @scoreboard = scoreboard
   end
 
   def start
     @i18n = I18n.new(@language_selector.select)
+    @player = Player.new(ask_name)
+    puts t(:hello, name: @player.name)
+
     difficulty = ask_difficulty
     @range = DIFFICULTIES[difficulty][:range]
     @max_attempts = DIFFICULTIES[difficulty][:max_attempts]
 
     number = generate_number
     attempts = 0
+    success = false
 
     display_welcome
 
@@ -31,6 +38,7 @@ class Game
       attempts += 1
 
       if correct?(guess, number)
+        success = true
         display_win(attempts)
         break
       elsif attempts >= @max_attempts
@@ -41,12 +49,38 @@ class Game
         display_remaining_attempts(attempts)
       end
     end
+
+    save_result(difficulty, number, attempts, success)
   end
 
   private
 
   def t(key, **params)
     @i18n.t(key, **params)
+  end
+
+  # Asks for a non-empty player name.
+  def ask_name
+    loop do
+      print t(:name_prompt)
+      name = gets.chomp.strip
+      return name unless name.empty?
+
+      puts t(:empty_name)
+    end
+  end
+
+  # Builds the game result hash and stores it on the scoreboard.
+  def save_result(difficulty, number, attempts, success)
+    @scoreboard.save(
+      player_name: @player.name,
+      difficulty: difficulty.to_s,
+      attempts: attempts,
+      language: @i18n.language.to_s,
+      number_to_guess: number,
+      success: success,
+      timestamp: Time.now.strftime('%Y-%m-%d %H:%M:%S %z')
+    )
   end
 
   def ask_difficulty

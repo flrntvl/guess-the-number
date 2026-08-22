@@ -2,15 +2,17 @@
 
 require 'game'
 require 'language_selector'
+require 'scoreboard'
 
 RSpec.describe Game do
   let(:language_selector) { instance_double(LanguageSelector, select: :en) }
+  let(:scoreboard) { instance_double(Scoreboard, save: nil) }
 
-  subject(:game) { described_class.new(language_selector: language_selector) }
+  subject(:game) { described_class.new(language_selector: language_selector, scoreboard: scoreboard) }
 
-  def play(number:, guesses:, difficulty: 'medium', language: :en)
+  def play(number:, guesses:, difficulty: 'medium', language: :en, name: 'Alice')
     allow(game).to receive(:rand).and_return(number)
-    inputs = [difficulty, *guesses].map { |value| "#{value}\n" }
+    inputs = [name, difficulty, *guesses].map { |value| "#{value}\n" }
     allow(game).to receive(:gets).and_return(*inputs)
     allow(language_selector).to receive(:select).and_return(language)
   end
@@ -91,6 +93,60 @@ RSpec.describe Game do
       end
     end
 
+    context 'with score saving' do
+      before do
+        allow(Time).to receive(:now).and_return(Time.new(2026, 5, 22, 10, 30, 0, '+02:00'))
+      end
+
+      it 'greets the player by name' do
+        play(number: 42, guesses: [42], name: 'Bob')
+
+        expect { game.start }.to output(/Hello Bob!/).to_stdout
+      end
+
+      it 're-prompts on an empty name until a valid one is given' do
+        allow(game).to receive(:rand).and_return(42)
+        allow(game).to receive(:gets).and_return("\n", "   \n", "Alice\n", "medium\n", "42\n")
+
+        expect { game.start }.to output(/Please enter a name\./).to_stdout
+      end
+
+      it 'saves the result when the player wins' do
+        play(number: 42, guesses: [42])
+
+        expect { game.start }.to output.to_stdout
+
+        expect(scoreboard).to have_received(:save).with(
+          player_name: 'Alice',
+          difficulty: 'medium',
+          attempts: 1,
+          language: 'en',
+          number_to_guess: 42,
+          success: true,
+          timestamp: '2026-05-22 10:30:00 +0200'
+        )
+      end
+
+      it 'saves the result when the player loses' do
+        max_attempts = Game::DIFFICULTIES[:medium][:max_attempts]
+        play(number: 42, guesses: Array.new(max_attempts, 10))
+
+        expect { game.start }.to output.to_stdout
+
+        expect(scoreboard).to have_received(:save).with(
+          hash_including(success: false, attempts: max_attempts)
+        )
+      end
+
+      it 'saves the selected language in the result' do
+        play(number: 42, guesses: [42], language: :fr)
+
+        expect { game.start }.to output.to_stdout
+
+        expect(scoreboard).to have_received(:save).with(hash_including(language: 'fr'))
+      end
+    end
+
     context 'with difficulty selection' do
       it 'displays the difficulty menu' do
         play(number: 42, guesses: [42])
@@ -132,14 +188,14 @@ RSpec.describe Game do
 
       it 're-prompts on an invalid difficulty choice' do
         allow(game).to receive(:rand).and_return(42)
-        allow(game).to receive(:gets).and_return("nonsense\n", "medium\n", "42\n")
+        allow(game).to receive(:gets).and_return("Alice\n", "nonsense\n", "medium\n", "42\n")
 
         expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
       end
 
       it 're-prompts on an out-of-range menu number, including zero' do
         allow(game).to receive(:rand).and_return(42)
-        allow(game).to receive(:gets).and_return("0\n", "99\n", "medium\n", "42\n")
+        allow(game).to receive(:gets).and_return("Alice\n", "0\n", "99\n", "medium\n", "42\n")
 
         expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
       end
