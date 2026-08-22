@@ -47,6 +47,11 @@ class Game
     @i18n.t(key, **params)
   end
 
+  # Reads console input, replacing invalid byte sequences.
+  def read_input
+    gets.chomp.scrub.strip
+  end
+
   # Asks for the next action in the main menu.
   def ask_main_action
     loop do
@@ -119,7 +124,7 @@ class Game
   def ask_name
     loop do
       print t(:name_prompt)
-      name = gets.chomp.strip
+      name = read_input
       return name unless name.empty?
 
       puts t(:empty_name)
@@ -143,7 +148,7 @@ class Game
     loop do
       display_difficulty_menu
       print t(:choice_prompt)
-      difficulty = resolve_difficulty(gets.chomp.strip.downcase)
+      difficulty = resolve_difficulty(read_input.downcase)
       return difficulty if difficulty
 
       puts t(:invalid_difficulty)
@@ -182,7 +187,7 @@ class Game
   def ask_guess
     loop do
       print t(:guess_prompt, min: @range.first, max: @range.last)
-      input = gets.chomp
+      input = read_input
 
       next puts t(:invalid_number) unless input.match?(/\A-?\d+\z/)
 

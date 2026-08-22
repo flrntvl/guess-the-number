@@ -10,7 +10,7 @@ class LanguageSelector
       puts '(e.g. 1, en or English / ex. 2, fr ou Français)'
       I18n::LANGUAGES.values.each_with_index { |label, index| puts "  #{index + 1}. #{label}" }
       print '> '
-      language = resolve(gets.chomp.strip.downcase)
+      language = resolve(read_input.downcase)
       return language if language
 
       puts 'Invalid choice / Choix invalide.'
@@ -18,6 +18,11 @@ class LanguageSelector
   end
 
   private
+
+  # Reads console input, replacing invalid byte sequences.
+  def read_input
+    gets.chomp.scrub.strip
+  end
 
   # Resolves the raw player input (menu number, language code or name)
   # into a language symbol, or nil when it matches nothing.
