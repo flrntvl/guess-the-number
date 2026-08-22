@@ -6,13 +6,14 @@ require 'scoreboard'
 
 RSpec.describe Game do
   let(:language_selector) { instance_double(LanguageSelector, select: :en) }
-  let(:scoreboard) { instance_double(Scoreboard, save: nil) }
+  let(:scoreboard) { instance_double(Scoreboard, save: nil, top: []) }
 
   subject(:game) { described_class.new(language_selector: language_selector, scoreboard: scoreboard) }
 
-  def play(number:, guesses:, difficulty: 'medium', language: :en, name: 'Alice')
+  def play(number:, guesses:, difficulty: 'medium', language: :en, name: 'Alice', action: '1')
     allow(game).to receive(:rand).and_return(number)
-    inputs = [name, difficulty, *guesses].map { |value| "#{value}\n" }
+    # The trailing "quit" exits the main menu loop once gets stubs repeat their last value.
+    inputs = [action, name, difficulty, *guesses, 'quit'].map { |value| "#{value}\n" }
     allow(game).to receive(:gets).and_return(*inputs)
     allow(language_selector).to receive(:select).and_return(language)
   end
@@ -93,6 +94,39 @@ RSpec.describe Game do
       end
     end
 
+    context 'with main menu' do
+      it 'displays the main menu and exits on quit by number' do
+        allow(game).to receive(:gets).and_return("3\n")
+
+        expect { game.start }.to output(/Main menu:/).to_stdout
+      end
+
+      it 'exits on quit chosen by name' do
+        allow(game).to receive(:gets).and_return("quit\n")
+
+        expect { game.start }.to output(/Main menu:/).to_stdout
+      end
+
+      it 'shows the leaderboard when chosen by number' do
+        allow(game).to receive(:gets).and_return("2\n", "3\n")
+
+        expect { game.start }.to output(/No scores yet\./).to_stdout
+        expect(scoreboard).to have_received(:top).at_least(3).times
+      end
+
+      it 'accepts an action chosen by name' do
+        allow(game).to receive(:gets).and_return("leaderboard\n", "quit\n")
+
+        expect { game.start }.to output(/Top scores/).to_stdout
+      end
+
+      it 're-prompts on an invalid action choice' do
+        allow(game).to receive(:gets).and_return("nonsense\n", "9\n", "3\n")
+
+        expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
+      end
+    end
+
     context 'with score saving' do
       before do
         allow(Time).to receive(:now).and_return(Time.new(2026, 5, 22, 10, 30, 0, '+02:00'))
@@ -106,7 +140,7 @@ RSpec.describe Game do
 
       it 're-prompts on an empty name until a valid one is given' do
         allow(game).to receive(:rand).and_return(42)
-        allow(game).to receive(:gets).and_return("\n", "   \n", "Alice\n", "medium\n", "42\n")
+        allow(game).to receive(:gets).and_return("1\n", "\n", "   \n", "Alice\n", "medium\n", "42\n", "quit\n")
 
         expect { game.start }.to output(/Please enter a name\./).to_stdout
       end
@@ -188,14 +222,14 @@ RSpec.describe Game do
 
       it 're-prompts on an invalid difficulty choice' do
         allow(game).to receive(:rand).and_return(42)
-        allow(game).to receive(:gets).and_return("Alice\n", "nonsense\n", "medium\n", "42\n")
+        allow(game).to receive(:gets).and_return("1\n", "Alice\n", "nonsense\n", "medium\n", "42\n", "quit\n")
 
         expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
       end
 
       it 're-prompts on an out-of-range menu number, including zero' do
         allow(game).to receive(:rand).and_return(42)
-        allow(game).to receive(:gets).and_return("Alice\n", "0\n", "99\n", "medium\n", "42\n")
+        allow(game).to receive(:gets).and_return("1\n", "Alice\n", "0\n", "99\n", "medium\n", "42\n", "quit\n")
 
         expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
       end

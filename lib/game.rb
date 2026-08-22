@@ -2,15 +2,22 @@
 
 require_relative 'i18n'
 require_relative 'language_selector'
+require_relative 'leaderboard_presenter'
 require_relative 'player'
 require_relative 'scoreboard'
 
-# Runs a number guessing game: difficulty selection, guessing loop and result display.
+# Runs a number guessing game: main menu, difficulty selection, guessing loop and result display.
 class Game
   DIFFICULTIES = {
     easy: { range: (1..50), max_attempts: 20 },
     medium: { range: (1..100), max_attempts: 15 },
     hard: { range: (1..500), max_attempts: 10 }
+  }.freeze
+
+  MAIN_ACTIONS = {
+    play: :action_play,
+    leaderboard: :action_leaderboard,
+    quit: :action_quit
   }.freeze
 
   def initialize(language_selector: LanguageSelector.new, scoreboard: Scoreboard.new)
@@ -19,7 +26,61 @@ class Game
   end
 
   def start
+    puts
+    puts '=== Guess the Number ==='
+    puts
     @i18n = I18n.new(@language_selector.select)
+    @presenter = LeaderboardPresenter.new(@i18n, @scoreboard, DIFFICULTIES.keys)
+
+    loop do
+      action = ask_main_action
+      break if action == :quit
+
+      play_round if action == :play
+      @presenter.display if action == :leaderboard
+    end
+  end
+
+  private
+
+  def t(key, **params)
+    @i18n.t(key, **params)
+  end
+
+  # Asks for the next action in the main menu.
+  def ask_main_action
+    loop do
+      display_main_menu
+      print t(:choice_prompt)
+      action = resolve_main_action(gets.chomp.strip.downcase)
+      return action if action
+
+      puts t(:invalid_action)
+    end
+  end
+
+  def display_main_menu
+    puts
+    puts t(:main_menu_title)
+    MAIN_ACTIONS.each_with_index do |(_, label_key), index|
+      puts "  #{index + 1}. #{t(label_key)}"
+    end
+  end
+
+  # Resolves the raw player input (menu number or action name)
+  # into a main action symbol, or nil when it matches nothing.
+  def resolve_main_action(input)
+    # Menu number: "1" selects the first action in the list.
+    if input.match?(/\A\d+\z/)
+      index = input.to_i - 1
+      return MAIN_ACTIONS.keys[index] if index >= 0
+    end
+
+    # Action name ("play"), case-insensitive.
+    input.to_sym if MAIN_ACTIONS.key?(input.to_sym)
+  end
+
+  def play_round
     @player = Player.new(ask_name)
     puts t(:hello, name: @player.name)
 
@@ -51,12 +112,7 @@ class Game
     end
 
     save_result(difficulty, number, attempts, success)
-  end
-
-  private
-
-  def t(key, **params)
-    @i18n.t(key, **params)
+    @presenter.display
   end
 
   # Asks for a non-empty player name.
@@ -86,7 +142,7 @@ class Game
   def ask_difficulty
     loop do
       display_difficulty_menu
-      print '> '
+      print t(:choice_prompt)
       difficulty = resolve_difficulty(gets.chomp.strip.downcase)
       return difficulty if difficulty
 

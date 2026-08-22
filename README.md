@@ -24,6 +24,7 @@ guess-the-number/
 │   ├── game.rb
 │   ├── i18n.rb
 │   ├── language_selector.rb
+│   ├── leaderboard_presenter.rb
 │   ├── player.rb
 │   └── scoreboard.rb
 ├── data/
@@ -74,11 +75,13 @@ Tests run automatically on every push and pull request via [GitHub Actions](.git
 ## How to play
 
 - Choose your language: English or Français
+- From the main menu, play, view the leaderboard or quit
 - Enter your name and choose a difficulty level
 - The game picks a secret number based on the chosen difficulty
 - You have a limited number of attempts to guess it
 - After each guess, the game tells you if you went too high or too low
 - Find the number before running out of attempts to win
+- The top 10 scores per difficulty (wins only, fewest attempts first) is shown after each game
 
 ## Data
 
@@ -118,4 +121,4 @@ This project is built step by step to learn Ruby:
 - [x] **Difficulty levels** — menu, `Hash`, `Symbol`
 - [x] **Multilingual support** — nested `Hash`, language selection
 - [x] **Score saving** — `File`, `JSON`
-- [ ] **Leaderboard** — `sort_by`, `select`, formatted display
+- [x] **Leaderboard** — `sort_by`, `select`, formatted display
