@@ -4,6 +4,10 @@
 
 A simple number guessing CLI game built with Ruby — made as a learning project to progressively explore core Ruby concepts.
 
+## About this project
+
+This project was developed with the help of AI. Beyond learning Ruby, it also serves as a playground for advanced agentic coding: development tasks are orchestrated with an AI agent ([Hermes Agent](https://hermes-agent.nousresearch.com)) which implements features end-to-end — writing code and tests, committing changes following the [contribution conventions](CONTRIBUTING.md), and opening pull requests on GitHub.
+
 ## Prerequisites
 
 Choose one of the two installation methods below.
