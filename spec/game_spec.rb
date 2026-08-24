@@ -4,6 +4,10 @@ require 'game'
 require 'language_selector'
 require 'scoreboard'
 
+# End-to-end specs for the whole game flow. Focused behavior (hints, invalid
+# input, menu resolution, name validation) is covered by the unit specs of
+# Round, ConsoleMenu, Player and LanguageSelector; these examples only check
+# that Game wires everything together.
 RSpec.describe Game do
   subject(:game) { described_class.new(language_selector: language_selector, scoreboard: scoreboard) }
 
@@ -14,36 +18,28 @@ RSpec.describe Game do
     allow(game).to receive(:rand).and_return(number)
     # The trailing "quit" exits the main menu loop once gets stubs repeat their last value.
     inputs = [action, name, difficulty, *guesses, 'quit'].map { |value| "#{value}\n" }
-    # The guessing loop now lives in Round and reads from the injected input.
     allow($stdin).to receive(:gets).and_return(*inputs)
     allow(language_selector).to receive(:select).and_return(language)
   end
 
   describe '#start' do
-    context 'when guessing the number' do
-      it 'declares victory when the guess is correct' do
-        play(number: 42, guesses: [42])
+    # Runs the game while capturing standard output.
+    def capture_stdout
+      original = $stdout
+      $stdout = StringIO.new
+      yield
+      $stdout.string
+    ensure
+      $stdout = original
+    end
 
-        expect { game.start }.to output(/You found it in 1 attempts!/).to_stdout
-      end
-
-      it 'gives a "too low" hint when the guess is below the number' do
+    context 'when playing a round' do
+      it 'runs a full winning round' do
         play(number: 42, guesses: [10, 42])
 
-        expect { game.start }.to output(/Too low!/).to_stdout
-      end
+        output = capture_stdout { game.start }
 
-      it 'gives a "too high" hint when the guess is above the number' do
-        play(number: 42, guesses: [80, 42])
-
-        expect { game.start }.to output(/Too high!/).to_stdout
-      end
-
-      it 'shows the remaining attempts after a wrong guess' do
-        remaining = Game::DIFFICULTIES[:medium][:max_attempts] - 1
-        play(number: 42, guesses: [10, 42])
-
-        expect { game.start }.to output(/Attempts remaining: #{remaining}/).to_stdout
+        expect(output).to include('Too low!', 'You found it in 2 attempts!')
       end
 
       it 'declares defeat after exhausting all attempts' do
@@ -54,60 +50,17 @@ RSpec.describe Game do
       end
     end
 
-    context 'with invalid guess input' do
-      it 're-prompts on non-numeric input' do
-        play(number: 42, guesses: ['abc', 42])
-
-        expect { game.start }.to output(/Please enter a valid number\./).to_stdout
-      end
-
-      it 're-prompts on out-of-range input' do
-        play(number: 42, guesses: [101, 42])
-
-        expect { game.start }.to output(/Please enter a number between 1 and 100\./).to_stdout
-      end
-    end
-
     context 'when playing in French' do
-      it 'gives a "too low" hint when the guess is below the number' do
+      it 'runs a full winning round in French' do
         play(number: 42, guesses: [10, 42], language: :fr)
 
-        expect { game.start }.to output(/Trop petit !/).to_stdout
-      end
+        output = capture_stdout { game.start }
 
-      it 'gives a "too high" hint when the guess is above the number' do
-        play(number: 42, guesses: [80, 42], language: :fr)
-
-        expect { game.start }.to output(/Trop grand !/).to_stdout
-      end
-
-      it 'declares victory in French when the guess is correct' do
-        play(number: 42, guesses: [42], language: :fr)
-
-        expect { game.start }.to output(/Vous avez trouvé en 1 tentative\(s\) !/).to_stdout
-      end
-
-      it 'declares defeat in French after exhausting all attempts' do
-        max_attempts = Game::DIFFICULTIES[:medium][:max_attempts]
-        play(number: 42, guesses: Array.new(max_attempts, 10), language: :fr)
-
-        expect { game.start }.to output(/Perdu ! Le nombre était 42\./).to_stdout
+        expect(output).to include('Trop petit !', 'Vous avez trouvé en 2 tentative(s) !')
       end
     end
 
     context 'with main menu' do
-      it 'displays the main menu and exits on quit by number' do
-        allow($stdin).to receive(:gets).and_return("3\n")
-
-        expect { game.start }.to output(/Main menu:/).to_stdout
-      end
-
-      it 'exits on quit chosen by name' do
-        allow($stdin).to receive(:gets).and_return("quit\n")
-
-        expect { game.start }.to output(/Main menu:/).to_stdout
-      end
-
       it 'shows the leaderboard when chosen by number' do
         allow($stdin).to receive(:gets).and_return("2\n", "3\n")
 
@@ -119,12 +72,6 @@ RSpec.describe Game do
         allow($stdin).to receive(:gets).and_return("leaderboard\n", "quit\n")
 
         expect { game.start }.to output(/Top scores/).to_stdout
-      end
-
-      it 're-prompts on an invalid action choice' do
-        allow($stdin).to receive(:gets).and_return("nonsense\n", "9\n", "3\n")
-
-        expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
       end
     end
 
@@ -147,30 +94,11 @@ RSpec.describe Game do
 
         expect { game.start }.to output(/Goodbye!/).to_stdout
       end
-
-      it 'says goodbye on a normal quit' do
-        allow($stdin).to receive(:gets).and_return("quit\n")
-
-        expect { game.start }.to output(/Goodbye!/).to_stdout
-      end
     end
 
     context 'with score saving' do
       before do
         allow(Time).to receive(:now).and_return(Time.new(2026, 5, 22, 10, 30, 0, '+02:00'))
-      end
-
-      it 'greets the player by name' do
-        play(number: 42, guesses: [42], name: 'Bob')
-
-        expect { game.start }.to output(/Hello Bob!/).to_stdout
-      end
-
-      it 're-prompts on an empty name until a valid one is given' do
-        allow(game).to receive(:rand).and_return(42)
-        allow($stdin).to receive(:gets).and_return("1\n", "\n", "   \n", "Alice\n", "medium\n", "42\n", "quit\n")
-
-        expect { game.start }.to output(/Please enter a name\./).to_stdout
       end
 
       it 'saves the result when the player wins' do
@@ -210,30 +138,6 @@ RSpec.describe Game do
     end
 
     context 'with difficulty selection' do
-      it 'displays the difficulty menu' do
-        play(number: 42, guesses: [42])
-
-        expect { game.start }.to output(/Choose a difficulty level \(enter its number or its name\):/).to_stdout
-      end
-
-      it 'accepts a difficulty chosen by name' do
-        play(number: 25, guesses: [25], difficulty: 'easy')
-
-        expect { game.start }.to output(/Guess the number between 1 and 50!/).to_stdout
-      end
-
-      it 'accepts a difficulty chosen by menu number' do
-        play(number: 25, guesses: [25], difficulty: '1')
-
-        expect { game.start }.to output(/Guess the number between 1 and 50!/).to_stdout
-      end
-
-      it 'accepts medium as the selected difficulty' do
-        play(number: 42, guesses: [42], difficulty: 'medium')
-
-        expect { game.start }.to output(/Guess the number between 1 and 100!/).to_stdout
-      end
-
       it 'applies the easy difficulty settings' do
         max_attempts = Game::DIFFICULTIES[:easy][:max_attempts]
         play(number: 25, guesses: Array.new(max_attempts, 10), difficulty: 'easy')
@@ -241,25 +145,11 @@ RSpec.describe Game do
         expect { game.start }.to output(/Game over! The number was 25\./).to_stdout
       end
 
-      it 'applies the selected difficulty settings' do
+      it 'applies the hard difficulty settings' do
         max_attempts = Game::DIFFICULTIES[:hard][:max_attempts]
         play(number: 250, guesses: Array.new(max_attempts, 10), difficulty: 'hard')
 
         expect { game.start }.to output(/Game over! The number was 250\./).to_stdout
-      end
-
-      it 're-prompts on an invalid difficulty choice' do
-        allow(game).to receive(:rand).and_return(42)
-        allow($stdin).to receive(:gets).and_return("1\n", "Alice\n", "nonsense\n", "medium\n", "42\n", "quit\n")
-
-        expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
-      end
-
-      it 're-prompts on an out-of-range menu number, including zero' do
-        allow(game).to receive(:rand).and_return(42)
-        allow($stdin).to receive(:gets).and_return("1\n", "Alice\n", "0\n", "99\n", "medium\n", "42\n", "quit\n")
-
-        expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
       end
     end
   end

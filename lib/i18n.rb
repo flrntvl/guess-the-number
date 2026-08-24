@@ -72,13 +72,16 @@ class I18n
 
   attr_reader :language
 
-  def initialize(language = DEFAULT_LANGUAGE)
-    @language = TRANSLATIONS.key?(language) ? language : DEFAULT_LANGUAGE
+  # translations: optional per-language hash overriding the defaults, useful
+  # for tests (e.g. a partial language to exercise the English fallback).
+  def initialize(language = DEFAULT_LANGUAGE, translations: TRANSLATIONS)
+    @language = translations.key?(language) ? language : DEFAULT_LANGUAGE
+    @translations = translations
   end
 
   def t(key, **params)
-    string = TRANSLATIONS.fetch(@language).fetch(key) do
-      TRANSLATIONS.fetch(DEFAULT_LANGUAGE).fetch(key)
+    string = @translations.fetch(@language).fetch(key) do
+      @translations.fetch(DEFAULT_LANGUAGE).fetch(key)
     end
 
     format(string, **params)
