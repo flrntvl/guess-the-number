@@ -5,6 +5,7 @@ require_relative 'i18n'
 require_relative 'language_selector'
 require_relative 'leaderboard_presenter'
 require_relative 'player'
+require_relative 'round'
 require_relative 'scoreboard'
 
 # Runs a number guessing game: main menu, difficulty selection, guessing loop and result display.
@@ -23,6 +24,8 @@ class Game
     quit: :action_quit
   }.freeze
 
+  TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S %z'
+
   def initialize(language_selector: LanguageSelector.new, scoreboard: Scoreboard.new)
     @language_selector = language_selector
     @scoreboard = scoreboard
@@ -38,8 +41,10 @@ class Game
     puts t(:goodbye)
   rescue EndOfInput
     # Standard input closed (e.g. Ctrl+D): exit gracefully.
+    # The language may not be chosen yet, so fall back to the default one.
+    @i18n ||= I18n.new
     puts
-    puts @i18n ? t(:goodbye) : 'Goodbye / Au revoir !'
+    puts t(:goodbye)
   end
 
   private
@@ -95,38 +100,24 @@ class Game
     input.to_sym if MAIN_ACTIONS.key?(input.to_sym)
   end
 
+  # Runs one guessing round: player setup, difficulty selection, the round
+  # itself, then saves the outcome and shows the leaderboard.
   def play_round
     @player = Player.new(ask_name)
     puts t(:hello, name: @player.name)
 
     difficulty = ask_difficulty
-    @range = DIFFICULTIES[difficulty][:range]
-    @max_attempts = DIFFICULTIES[difficulty][:max_attempts]
+    settings = DIFFICULTIES[difficulty]
+    number = generate_number(settings[:range])
 
-    number = generate_number
-    attempts = 0
-    success = false
+    result = Round.new(
+      range: settings[:range],
+      max_attempts: settings[:max_attempts],
+      number: number,
+      i18n: @i18n
+    ).play
 
-    display_welcome
-
-    loop do
-      guess = ask_guess
-      attempts += 1
-
-      if correct?(guess, number)
-        success = true
-        display_win(attempts)
-        break
-      elsif attempts >= @max_attempts
-        display_loss(number)
-        break
-      else
-        display_hint(guess, number)
-        display_remaining_attempts(attempts)
-      end
-    end
-
-    save_result(difficulty, number, attempts, success)
+    save_result(difficulty, number, result)
     @presenter.display
   end
 
@@ -142,15 +133,15 @@ class Game
   end
 
   # Builds the game result hash and stores it on the scoreboard.
-  def save_result(difficulty, number, attempts, success)
+  def save_result(difficulty, number, result)
     @scoreboard.save(
       player_name: @player.name,
       difficulty: difficulty.to_s,
-      attempts: attempts,
+      attempts: result.attempts,
       language: @i18n.language.to_s,
       number_to_guess: number,
-      success: success,
-      timestamp: Time.now.strftime('%Y-%m-%d %H:%M:%S %z')
+      success: result.success,
+      timestamp: Time.now.strftime(TIMESTAMP_FORMAT)
     )
   end
 
@@ -187,45 +178,7 @@ class Game
     input.to_sym if DIFFICULTIES.key?(input.to_sym)
   end
 
-  def generate_number
-    rand(@range)
-  end
-
-  def display_welcome
-    puts t(:welcome, min: @range.first, max: @range.last)
-  end
-
-  def ask_guess
-    loop do
-      print t(:guess_prompt, min: @range.first, max: @range.last)
-      input = read_input
-
-      next puts t(:invalid_number) unless input.match?(/\A-?\d+\z/)
-
-      guess = input.to_i
-      return guess if @range.include?(guess)
-
-      puts t(:out_of_range, min: @range.first, max: @range.last)
-    end
-  end
-
-  def correct?(guess, number)
-    guess == number
-  end
-
-  def display_hint(guess, number)
-    puts guess < number ? t(:too_low) : t(:too_high)
-  end
-
-  def display_remaining_attempts(attempts)
-    puts t(:remaining_attempts, count: @max_attempts - attempts)
-  end
-
-  def display_win(attempts)
-    puts t(:win, attempts: attempts)
-  end
-
-  def display_loss(number)
-    puts t(:loss, number: number)
+  def generate_number(range)
+    rand(range)
   end
 end

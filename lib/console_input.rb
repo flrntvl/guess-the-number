@@ -2,11 +2,17 @@
 
 require_relative 'end_of_input'
 
-# Reads console input shared by all interactive prompts, replacing invalid byte sequences.
+# Shared console-reading logic for all interactive classes.
+#
+# Centralizes how a line is read and normalized (invalid bytes scrubbed,
+# surrounding whitespace stripped) and turns end-of-input into a single
+# EndOfInput signal that callers handle in one place.
 module ConsoleInput
-  # Raises EndOfInput when standard input is closed (gets returns nil).
-  def read_input
-    input = gets
+  # Reads one line from the given IO (standard input by default).
+  # Raises EndOfInput when the stream is closed (gets returns nil).
+  def read_input(io = $stdin)
+    input = io.gets
+
     raise EndOfInput if input.nil?
 
     input.chomp.scrub.strip

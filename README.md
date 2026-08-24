@@ -32,6 +32,7 @@ guess-the-number/
 │   ├── language_selector.rb
 │   ├── leaderboard_presenter.rb
 │   ├── player.rb
+│   ├── round.rb
 │   └── scoreboard.rb
 ├── spec/
 │   ├── game_spec.rb
@@ -39,6 +40,7 @@ guess-the-number/
 │   ├── language_selector_spec.rb
 │   ├── leaderboard_presenter_spec.rb
 │   ├── player_spec.rb
+│   ├── round_spec.rb
 │   ├── scoreboard_spec.rb
 │   └── spec_helper.rb
 ├── data/
@@ -107,6 +109,39 @@ docker compose run --rm guess bundle exec rubocop -a
 
 The linter also runs in CI, before the tests.
 
+## Technical design notes
+
+Notes on a few implementation choices, for anyone reading or extending the code.
+
+### `ConsoleInput` module
+
+`Game`, `Round` and `LanguageSelector` all read player input from the console. Rather than duplicating that logic, they share the `ConsoleInput` module (`lib/console_input.rb`), which centralizes:
+
+- **Input normalization** — each line is cleaned up on the way in: invalid byte sequences are scrubbed (so a badly encoded paste doesn't crash the game) and surrounding whitespace is stripped.
+- **End-of-input handling** — when standard input closes (e.g. Ctrl+D), `gets` returns `nil`. The module converts that into a single `EndOfInput` exception, so each interactive class stays simple and `Game#start` handles EOF in one `rescue`.
+
+### `Round::Result` struct
+
+A finished guessing round produces two values: the number of attempts and whether the player won. Returning them as a bare array (`[attempts, success]`) would be error-prone — callers could mix up the order. Instead, `Round#play` returns a `Round::Result`, defined with `Struct.new(:attempts, :success, keyword_init: true)`:
+
+```ruby
+result = round.play
+result.attempts  # => 2
+result.success   # => true
+```
+
+A Struct gives named accessors plus built-in keyword initialization, equality and `to_h` without writing a full class for two data-only fields. `Game#save_result` relies on this to store each field under its proper name in `data/results.json`.
+
+### Testing strategy: stubbing `$stdin`, not the objects
+
+In Ruby, bare `gets` is really `$stdin.gets` — `$stdin` is the global variable holding the standard input stream (the keyboard). The specs use this as the seam for simulating a player:
+
+```ruby
+allow($stdin).to receive(:gets).and_return("Alice\n", "42\n")
+```
+
+Stubbing at this boundary rather than on game objects (`allow(game).to receive(:gets)`) keeps tests valid no matter which internal object reads the input — refactoring code between classes doesn't break them. End-to-end specs in `game_spec.rb` still use this approach; focused specs like `round_spec.rb` call `Round#play` directly with fixed settings and assert on the returned `Result`.
+
 ## How to play
 
 - Choose your language: English or Français
@@ -138,15 +173,15 @@ Each entry corresponds to one completed game (win or loss):
 ]
 ```
 
-| Field | Type | Description |
-|---|---|---|
-| `player_name` | String | Name entered at the start |
-| `difficulty` | String | `"easy"`, `"medium"`, or `"hard"` |
-| `attempts` | Integer | Number of guesses made |
-| `language` | String | `"en"` or `"fr"` |
-| `number_to_guess` | Integer | The secret number |
-| `success` | Boolean | `true` if the player found the number |
-| `timestamp` | String | Date and time of the game |
+| Field             | Type    | Description                           |
+| ----------------- | ------- | ------------------------------------- |
+| `player_name`     | String  | Name entered at the start             |
+| `difficulty`      | String  | `"easy"`, `"medium"`, or `"hard"`     |
+| `attempts`        | Integer | Number of guesses made                |
+| `language`        | String  | `"en"` or `"fr"`                      |
+| `number_to_guess` | Integer | The secret number                     |
+| `success`         | Boolean | `true` if the player found the number |
+| `timestamp`       | String  | Date and time of the game             |
 
 ## Roadmap
 
