@@ -6,7 +6,7 @@ RSpec.describe LanguageSelector do
   subject(:selector) { described_class.new }
 
   def select_with(*inputs)
-    allow(selector).to receive(:gets).and_return(*inputs.map { |value| "#{value}\n" })
+    allow($stdin).to receive(:gets).and_return(*inputs.map { |value| "#{value}\n" })
   end
 
   describe '#select' do
@@ -64,7 +64,7 @@ RSpec.describe LanguageSelector do
     end
 
     it 'raises EndOfInput when standard input closes' do
-      allow(selector).to receive(:gets).and_return(nil)
+      allow($stdin).to receive(:gets).and_return(nil)
 
       expect { selector.select }.to raise_error(EndOfInput)
     end

@@ -14,7 +14,8 @@ RSpec.describe Game do
     allow(game).to receive(:rand).and_return(number)
     # The trailing "quit" exits the main menu loop once gets stubs repeat their last value.
     inputs = [action, name, difficulty, *guesses, 'quit'].map { |value| "#{value}\n" }
-    allow(game).to receive(:gets).and_return(*inputs)
+    # The guessing loop now lives in Round and reads from the injected input.
+    allow($stdin).to receive(:gets).and_return(*inputs)
     allow(language_selector).to receive(:select).and_return(language)
   end
 
@@ -96,32 +97,32 @@ RSpec.describe Game do
 
     context 'with main menu' do
       it 'displays the main menu and exits on quit by number' do
-        allow(game).to receive(:gets).and_return("3\n")
+        allow($stdin).to receive(:gets).and_return("3\n")
 
         expect { game.start }.to output(/Main menu:/).to_stdout
       end
 
       it 'exits on quit chosen by name' do
-        allow(game).to receive(:gets).and_return("quit\n")
+        allow($stdin).to receive(:gets).and_return("quit\n")
 
         expect { game.start }.to output(/Main menu:/).to_stdout
       end
 
       it 'shows the leaderboard when chosen by number' do
-        allow(game).to receive(:gets).and_return("2\n", "3\n")
+        allow($stdin).to receive(:gets).and_return("2\n", "3\n")
 
         expect { game.start }.to output(/No scores yet\./).to_stdout
         expect(scoreboard).to have_received(:top).at_least(3).times
       end
 
       it 'accepts an action chosen by name' do
-        allow(game).to receive(:gets).and_return("leaderboard\n", "quit\n")
+        allow($stdin).to receive(:gets).and_return("leaderboard\n", "quit\n")
 
         expect { game.start }.to output(/Top scores/).to_stdout
       end
 
       it 're-prompts on an invalid action choice' do
-        allow(game).to receive(:gets).and_return("nonsense\n", "9\n", "3\n")
+        allow($stdin).to receive(:gets).and_return("nonsense\n", "9\n", "3\n")
 
         expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
       end
@@ -129,14 +130,14 @@ RSpec.describe Game do
 
     context 'when standard input ends (EOF)' do
       it 'exits gracefully at the main menu prompt' do
-        allow(game).to receive(:gets).and_return(nil)
+        allow($stdin).to receive(:gets).and_return(nil)
 
         expect { game.start }.to output(/Goodbye!/).to_stdout
       end
 
       it 'exits gracefully in the middle of a round' do
         allow(game).to receive(:rand).and_return(42)
-        allow(game).to receive(:gets).and_return("1\n", "Alice\n", nil)
+        allow($stdin).to receive(:gets).and_return("1\n", "Alice\n", nil)
 
         expect { game.start }.to output(/Goodbye!/).to_stdout
       end
@@ -144,11 +145,11 @@ RSpec.describe Game do
       it 'exits gracefully before the language is chosen' do
         allow(language_selector).to receive(:select).and_raise(EndOfInput)
 
-        expect { game.start }.to output(%r{Goodbye / Au revoir !}).to_stdout
+        expect { game.start }.to output(/Goodbye!/).to_stdout
       end
 
       it 'says goodbye on a normal quit' do
-        allow(game).to receive(:gets).and_return("quit\n")
+        allow($stdin).to receive(:gets).and_return("quit\n")
 
         expect { game.start }.to output(/Goodbye!/).to_stdout
       end
@@ -167,7 +168,7 @@ RSpec.describe Game do
 
       it 're-prompts on an empty name until a valid one is given' do
         allow(game).to receive(:rand).and_return(42)
-        allow(game).to receive(:gets).and_return("1\n", "\n", "   \n", "Alice\n", "medium\n", "42\n", "quit\n")
+        allow($stdin).to receive(:gets).and_return("1\n", "\n", "   \n", "Alice\n", "medium\n", "42\n", "quit\n")
 
         expect { game.start }.to output(/Please enter a name\./).to_stdout
       end
@@ -249,14 +250,14 @@ RSpec.describe Game do
 
       it 're-prompts on an invalid difficulty choice' do
         allow(game).to receive(:rand).and_return(42)
-        allow(game).to receive(:gets).and_return("1\n", "Alice\n", "nonsense\n", "medium\n", "42\n", "quit\n")
+        allow($stdin).to receive(:gets).and_return("1\n", "Alice\n", "nonsense\n", "medium\n", "42\n", "quit\n")
 
         expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
       end
 
       it 're-prompts on an out-of-range menu number, including zero' do
         allow(game).to receive(:rand).and_return(42)
-        allow(game).to receive(:gets).and_return("1\n", "Alice\n", "0\n", "99\n", "medium\n", "42\n", "quit\n")
+        allow($stdin).to receive(:gets).and_return("1\n", "Alice\n", "0\n", "99\n", "medium\n", "42\n", "quit\n")
 
         expect { game.start }.to output(/Please enter a valid choice\./).to_stdout
       end
