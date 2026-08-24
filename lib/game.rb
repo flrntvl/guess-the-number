@@ -41,8 +41,8 @@ class Game
     main_menu_loop
     puts
     puts t(:goodbye)
-  rescue EndOfInput
-    # Standard input closed (e.g. Ctrl+D): exit gracefully.
+  rescue EndOfInput, Interrupt
+    # Input closed (Ctrl+D) or interrupted (Ctrl+C): exit gracefully.
     # The language may not be chosen yet, so fall back to the default one.
     @i18n ||= I18n.new
     puts
