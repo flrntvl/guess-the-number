@@ -12,9 +12,13 @@ module ConsoleInput
   # Raises EndOfInput when the stream is closed (gets returns nil).
   def read_input(io = $stdin)
     input = io.gets
-
     raise EndOfInput if input.nil?
 
     input.chomp.scrub.strip
   end
+
+  # Also expose the method at module level (ConsoleInput.read_input), so
+  # class methods like Player.ask can use it without an instance. Included
+  # classes keep calling it as before.
+  module_function :read_input
 end

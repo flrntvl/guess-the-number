@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'console_input'
+require_relative 'console_menu'
 require_relative 'i18n'
 require_relative 'language_selector'
 require_relative 'leaderboard_presenter'
@@ -67,43 +68,20 @@ class Game
     @i18n.t(key, **params)
   end
 
-  # Asks for the next action in the main menu.
+  # Asks for the next main-menu action via the shared console menu.
   def ask_main_action
-    loop do
-      display_main_menu
-      print t(:choice_prompt)
-      action = resolve_main_action(read_input.downcase)
-      return action if action
-
-      puts t(:invalid_action)
-    end
-  end
-
-  def display_main_menu
-    puts
-    puts t(:main_menu_title)
-    MAIN_ACTIONS.each_with_index do |(_, label_key), index|
-      puts "  #{index + 1}. #{t(label_key)}"
-    end
-  end
-
-  # Resolves the raw player input (menu number or action name)
-  # into a main action symbol, or nil when it matches nothing.
-  def resolve_main_action(input)
-    # Menu number: "1" selects the first action in the list.
-    if input.match?(/\A\d+\z/)
-      index = input.to_i - 1
-      return MAIN_ACTIONS.keys[index] if index >= 0
-    end
-
-    # Action name ("play"), case-insensitive.
-    input.to_sym if MAIN_ACTIONS.key?(input.to_sym)
+    ConsoleMenu.new(
+      title: "\n#{t(:main_menu_title)}",
+      options: MAIN_ACTIONS.transform_values { |label_key| t(label_key) },
+      prompt: t(:choice_prompt),
+      invalid_message: t(:invalid_action)
+    ).select
   end
 
   # Runs one guessing round: player setup, difficulty selection, the round
   # itself, then saves the outcome and shows the leaderboard.
   def play_round
-    @player = Player.new(ask_name)
+    @player = Player.ask(i18n: @i18n)
     puts t(:hello, name: @player.name)
 
     difficulty = ask_difficulty
@@ -121,17 +99,6 @@ class Game
     @presenter.display
   end
 
-  # Asks for a non-empty player name.
-  def ask_name
-    loop do
-      print t(:name_prompt)
-      name = read_input
-      return name unless name.empty?
-
-      puts t(:empty_name)
-    end
-  end
-
   # Builds the game result hash and stores it on the scoreboard.
   def save_result(difficulty, number, result)
     @scoreboard.save(
@@ -145,37 +112,21 @@ class Game
     )
   end
 
+  # Asks for the difficulty level via the shared console menu.
   def ask_difficulty
-    loop do
-      display_difficulty_menu
-      print t(:choice_prompt)
-      difficulty = resolve_difficulty(read_input.downcase)
-      return difficulty if difficulty
-
-      puts t(:invalid_difficulty)
-    end
-  end
-
-  def display_difficulty_menu
-    puts t(:difficulty_menu)
-    DIFFICULTIES.each_with_index do |(name, settings), index|
-      translated_name = t(:"difficulty_#{name}")
-      range_max = settings[:range].last
-      puts "  #{index + 1}. #{translated_name} (1-#{range_max}, #{settings[:max_attempts]} #{t(:attempts_word)})"
-    end
-  end
-
-  # Resolves the raw player input (menu number or difficulty name)
-  # into a difficulty symbol, or nil when it matches nothing.
-  def resolve_difficulty(input)
-    # Menu number: "1" selects the first difficulty in the list.
-    if input.match?(/\A\d+\z/)
-      index = input.to_i - 1
-      return DIFFICULTIES.keys[index] if index >= 0
+    options = DIFFICULTIES.keys.to_h do |name|
+      settings = DIFFICULTIES[name]
+      label = "#{t(:"difficulty_#{name}")} (1-#{settings[:range].last}, " \
+              "#{settings[:max_attempts]} #{t(:attempts_word)})"
+      [name.to_s, label]
     end
 
-    # Difficulty name ("easy"), case-insensitive.
-    input.to_sym if DIFFICULTIES.key?(input.to_sym)
+    ConsoleMenu.new(
+      title: t(:difficulty_menu),
+      options: options,
+      prompt: t(:choice_prompt),
+      invalid_message: t(:invalid_difficulty)
+    ).select.to_sym
   end
 
   def generate_number(range)

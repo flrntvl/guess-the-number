@@ -26,6 +26,7 @@ guess-the-number/
 │   └── guess
 ├── lib/
 │   ├── console_input.rb
+│   ├── console_menu.rb
 │   ├── end_of_input.rb
 │   ├── game.rb
 │   ├── i18n.rb
@@ -35,6 +36,7 @@ guess-the-number/
 │   ├── round.rb
 │   └── scoreboard.rb
 ├── spec/
+│   ├── console_menu_spec.rb
 │   ├── game_spec.rb
 │   ├── i18n_spec.rb
 │   ├── language_selector_spec.rb
@@ -119,6 +121,31 @@ Notes on a few implementation choices, for anyone reading or extending the code.
 
 - **Input normalization** — each line is cleaned up on the way in: invalid byte sequences are scrubbed (so a badly encoded paste doesn't crash the game) and surrounding whitespace is stripped.
 - **End-of-input handling** — when standard input closes (e.g. Ctrl+D), `gets` returns `nil`. The module converts that into a single `EndOfInput` exception, so each interactive class stays simple and `Game#start` handles EOF in one `rescue`.
+
+### `ConsoleMenu` class
+
+Three menus exist in the game (language selection, main actions, difficulty) and all repeat the same pattern: display options → prompt → resolve the input → re-prompt when invalid. `ConsoleMenu` (`lib/console_menu.rb`) implements that pattern once. Callers describe their menu declaratively and get back the chosen key:
+
+```ruby
+ConsoleMenu.new(
+  title: t(:main_menu_title),
+  options: { play: 'Play', quit: 'Quit' },   # { key => displayed label }
+  prompt: t(:choice_prompt),
+  invalid_message: t(:invalid_action)
+).select  # => :play or :quit
+```
+
+A choice is resolved by menu number (`"2"` → second option), by key (`"quit"`), or by label (`"Play"`, case-insensitive).
+
+**Why pre-translated labels?** The menu takes ready-to-display strings rather than translation keys plus an `i18n` object — a deliberate trade-off:
+
+- At language-selection time no `I18n` exists yet (this very menu produces it), so an I18n-dependent menu could not be used there without a second code path.
+- The menu stays generic: it knows how to display options and read a choice, nothing about languages. Swapping the translation system would not touch it.
+- Specs need no translation fixtures.
+
+The cost: labels are computed once at construction. That is fine here since the language cannot change mid-menu; dynamic labels would require passing blocks instead of strings.
+
+`Player.ask(i18n:)` follows the same spirit for names: the non-empty validation lives inside `Player`, not in `Game`.
 
 ### `Round::Result` struct
 
