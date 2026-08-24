@@ -34,6 +34,17 @@ RSpec.describe Scoreboard do
                                             ])
     end
 
+    it 'breaks ties on equal attempts by earliest timestamp' do
+      write_results([
+                      { player_name: 'Late', difficulty: 'medium', attempts: 5, success: true,
+                        timestamp: '2026-05-23 10:00:00 +0200' },
+                      { player_name: 'Early', difficulty: 'medium', attempts: 5, success: true,
+                        timestamp: '2026-05-22 10:00:00 +0200' }
+                    ])
+
+      expect(scoreboard.top(:medium).map { |entry| entry[:player_name] }).to eq(%w[Early Late])
+    end
+
     it 'filters by difficulty' do
       write_results([
                       { player_name: 'Easy winner', difficulty: 'easy', attempts: 2, success: true },
@@ -91,6 +102,29 @@ RSpec.describe Scoreboard do
       scoreboard.save(player_name: 'Alice')
 
       expect(File.read(file_path)).to include('  "player_name": "Alice"')
+    end
+
+    it 'writes through a temporary file that replaces the target in one rename' do
+      allow(File).to receive(:rename).and_call_original
+
+      scoreboard.save(player_name: 'Alice')
+
+      expect(File).to have_received(:rename)
+        .with("#{file_path}.tmp", file_path)
+    end
+
+    it 'leaves no temporary file behind after a successful save' do
+      scoreboard.save(player_name: 'Alice')
+
+      expect(File.exist?("#{file_path}.tmp")).to be(false)
+    end
+
+    it 'removes the temporary file even when the rename fails' do
+      allow(File).to receive(:rename).and_raise(StandardError, 'disk full')
+
+      expect { scoreboard.save(player_name: 'Alice') }.to raise_error(StandardError)
+
+      expect(File.exist?("#{file_path}.tmp")).to be(false)
     end
   end
 end
