@@ -33,8 +33,10 @@ RSpec.describe I18n do
     end
 
     describe 'per-key fallback to English' do
+      # subject: a translator whose FR table is missing some keys on purpose.
       subject(:translator) { described_class.new(:fr, translations: partial_translations) }
 
+      # Deliberately partial: `win` exists only in EN, to exercise the fallback.
       let(:partial_translations) do
         {
           en: { too_low: 'Too low!', win: 'You found it in %<attempts>d attempts!' },
@@ -54,6 +56,22 @@ RSpec.describe I18n do
         de = described_class.new(:de, translations: partial_translations)
 
         expect(de.t(:too_low)).to eq('Too low!')
+      end
+    end
+
+    describe 'translation completeness' do
+      # Guards against a key being added to the English reference table but
+      # forgotten in another language: every supported language must be able
+      # to display any menu without silently falling back.
+      it 'defines every English key in every supported language' do
+        reference_keys = I18n::TRANSLATIONS[:en].keys
+
+        I18n::LANGUAGES.each_key do |lang|
+          missing = reference_keys - I18n::TRANSLATIONS[lang].keys
+
+          expect(missing).to be_empty,
+                             "missing translations in #{lang}: #{missing.join(', ')}"
+        end
       end
     end
   end

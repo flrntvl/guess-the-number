@@ -9,13 +9,27 @@ require 'scoreboard'
 # Round, ConsoleMenu, Player and LanguageSelector; these examples only check
 # that Game wires everything together.
 RSpec.describe Game do
-  subject(:game) { described_class.new(language_selector: language_selector, scoreboard: scoreboard) }
+  # subject: the object under test, rebuilt before every `it`.
+  # Doubles are injected so no real file, language prompt or random draw occurs.
+  subject(:game) do
+    described_class.new(
+      language_selector: language_selector,
+      scoreboard: scoreboard,
+      random: random_generator
+    )
+  end
 
+  # let + instance_double: a fake verifying the real class' interface.
+  # `select` answers :en, `save` does nothing, `top` returns no scores.
   let(:language_selector) { instance_double(LanguageSelector, select: :en) }
   let(:scoreboard) { instance_double(Scoreboard, save: nil, top: []) }
+  let(:random_generator) { instance_double(Random, rand: number_to_guess) }
+  let(:number_to_guess) { 42 }
 
+  # Helper scripting a full session: fixes the secret number, then queues
+  # every answer in order (menu action, name, difficulty, guesses, quit).
   def play(number:, guesses:, difficulty: 'medium', language: :en, name: 'Alice', action: '1')
-    allow(game).to receive(:rand).and_return(number)
+    allow(random_generator).to receive(:rand).and_return(number)
     # The trailing "quit" exits the main menu loop once gets stubs repeat their last value.
     inputs = [action, name, difficulty, *guesses, 'quit'].map { |value| "#{value}\n" }
     allow($stdin).to receive(:gets).and_return(*inputs)
@@ -58,6 +72,17 @@ RSpec.describe Game do
 
         expect(output).to include('Trop petit !', 'Vous avez trouvé en 2 tentative(s) !')
       end
+
+      it 'displays the difficulty menu in the selected language' do
+        play(number: 42, guesses: [42], language: :fr)
+
+        output = capture_stdout { game.start }
+
+        expect(output).to include(
+          'Choisissez un niveau de difficulté (son numéro ou son nom) :',
+          '1. Facile', '2. Moyen', '3. Difficile'
+        )
+      end
     end
 
     context 'with main menu' do
@@ -83,7 +108,7 @@ RSpec.describe Game do
       end
 
       it 'exits gracefully in the middle of a round' do
-        allow(game).to receive(:rand).and_return(42)
+        allow(random_generator).to receive(:rand).and_return(42)
         allow($stdin).to receive(:gets).and_return("1\n", "Alice\n", nil)
 
         expect { game.start }.to output(/Goodbye!/).to_stdout
@@ -97,6 +122,7 @@ RSpec.describe Game do
     end
 
     context 'with score saving' do
+      # Freeze Time so the saved timestamp can be asserted exactly.
       before do
         allow(Time).to receive(:now).and_return(Time.new(2026, 5, 22, 10, 30, 0, '+02:00'))
       end
