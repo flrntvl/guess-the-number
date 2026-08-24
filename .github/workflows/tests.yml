@@ -16,13 +16,19 @@ jobs:
   test:
     runs-on: ubuntu-latest # virtual machine provided by GitHub to run the job
 
+    # Run the whole suite once per Ruby version listed here, in parallel.
+    # Add a version to this list when supporting a new Ruby release.
+    strategy:
+      matrix:
+        ruby-version: ['4.0']
+
     steps:
     - uses: actions/checkout@v4 # checks out the repo's code onto the machine
 
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1 # official action that installs Ruby
       with:
-        ruby-version: '4.0'   # same version as the Dockerfile (ruby:4.0.6-alpine)
+        ruby-version: ${{ matrix.ruby-version }} # one job per version in the matrix
         bundler-cache: true   # installs gems (bundle install) and caches them for future runs
 
     - name: Run linter

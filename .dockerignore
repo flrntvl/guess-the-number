@@ -1,4 +1,16 @@
+# Git and GitHub housekeeping — not needed inside the image
 .git
 .gitignore
-README.md
+.github
+
+# Development tooling — not needed to run the game
+coverage
+.ruby-lsp
+Makefile
+
+# Local game data — results are runtime data, not build input
 data
+
+# Docs
+README.md
+CONTRIBUTING.md
