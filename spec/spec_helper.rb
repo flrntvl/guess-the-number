@@ -5,7 +5,7 @@ $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
 begin
   require 'simplecov'
   SimpleCov.start do
-    add_filter '/spec/'
+    skip '/spec/'
   end
 rescue LoadError
   nil
@@ -24,4 +24,15 @@ RSpec.configure do |config|
   config.disable_monkey_patching!
   config.order = :random
   Kernel.srand config.seed
+
+  # Silence console output from production code under test. Examples that
+  # assert on output still work: RSpec's `output` matcher swaps $stdout
+  # itself inside the block, then restores this buffer.
+  config.around do |example|
+    original_stdout = $stdout
+    $stdout = StringIO.new
+    example.run
+  ensure
+    $stdout = original_stdout
+  end
 end

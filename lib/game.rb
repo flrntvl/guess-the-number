@@ -27,9 +27,10 @@ class Game
 
   TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S %z'
 
-  def initialize(language_selector: LanguageSelector.new, scoreboard: Scoreboard.new)
+  def initialize(language_selector: LanguageSelector.new, scoreboard: Scoreboard.new, random: Random)
     @language_selector = language_selector
     @scoreboard = scoreboard
+    @random = random
   end
 
   def start
@@ -85,28 +86,33 @@ class Game
     puts t(:hello, name: @player.name)
 
     difficulty = ask_difficulty
+    result = run_round(difficulty)
+
+    save_result(difficulty, result)
+    @presenter.display
+  end
+
+  # Draws a number for the chosen difficulty and plays the round.
+  def run_round(difficulty)
     settings = DIFFICULTIES[difficulty]
     number = generate_number(settings[:range])
 
-    result = Round.new(
+    Round.new(
       range: settings[:range],
       max_attempts: settings[:max_attempts],
       number: number,
       i18n: @i18n
     ).play
-
-    save_result(difficulty, number, result)
-    @presenter.display
   end
 
   # Builds the game result hash and stores it on the scoreboard.
-  def save_result(difficulty, number, result)
+  def save_result(difficulty, result)
     @scoreboard.save(
       player_name: @player.name,
       difficulty: difficulty.to_s,
       attempts: result.attempts,
       language: @i18n.language.to_s,
-      number_to_guess: number,
+      number_to_guess: result.number_to_guess,
       success: result.success,
       timestamp: Time.now.strftime(TIMESTAMP_FORMAT)
     )
@@ -114,22 +120,25 @@ class Game
 
   # Asks for the difficulty level via the shared console menu.
   def ask_difficulty
-    options = DIFFICULTIES.keys.to_h do |name|
-      settings = DIFFICULTIES[name]
-      label = "#{t(:"difficulty_#{name}")} (1-#{settings[:range].last}, " \
-              "#{settings[:max_attempts]} #{t(:attempts_word)})"
-      [name.to_s, label]
-    end
-
     ConsoleMenu.new(
       title: t(:difficulty_menu),
-      options: options,
+      options: difficulty_options,
       prompt: t(:choice_prompt),
       invalid_message: t(:invalid_difficulty)
     ).select.to_sym
   end
 
+  # Builds the translated menu labels for each difficulty.
+  def difficulty_options
+    DIFFICULTIES.keys.to_h do |name|
+      settings = DIFFICULTIES[name]
+      label = "#{t(:"difficulty_#{name}")} (1-#{settings[:range].last}, " \
+              "#{settings[:max_attempts]} #{t(:attempts_word)})"
+      [name.to_s, label]
+    end
+  end
+
   def generate_number(range)
-    rand(range)
+    @random.rand(range)
   end
 end

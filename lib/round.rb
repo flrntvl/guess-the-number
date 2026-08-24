@@ -7,9 +7,9 @@ require_relative 'console_input'
 class Round
   include ConsoleInput
 
-  # Outcome of a finished round. A Struct avoids a full class for two
-  # read-only data fields with equality and keyword initialization built in.
-  Result = Struct.new(:attempts, :success, keyword_init: true)
+  # Outcome of a finished round. A Struct avoids a full class for data-only
+  # fields with equality and keyword initialization built in.
+  Result = Struct.new(:attempts, :success, :number_to_guess, keyword_init: true)
 
   def initialize(range:, max_attempts:, number:, i18n:)
     @range = range
@@ -27,16 +27,10 @@ class Round
       guess = ask_guess
       attempts += 1
 
-      if correct?(guess)
-        display_win(attempts)
-        return Result.new(attempts: attempts, success: true)
-      elsif attempts >= @max_attempts
-        display_loss
-        return Result.new(attempts: attempts, success: false)
-      else
-        display_hint(guess)
-        display_remaining_attempts(attempts)
-      end
+      return evaluate(guess, attempts) if correct?(guess) || attempts >= @max_attempts
+
+      display_hint(guess)
+      display_remaining_attempts(attempts)
     end
   end
 
@@ -44,6 +38,17 @@ class Round
 
   def t(key, **params)
     @i18n.t(key, **params)
+  end
+
+  # Builds the round outcome after a winning guess or the last allowed one.
+  def evaluate(last_guess, attempts)
+    if correct?(last_guess)
+      display_win(attempts)
+      Result.new(attempts: attempts, success: true, number_to_guess: @number)
+    else
+      display_loss
+      Result.new(attempts: attempts, success: false, number_to_guess: @number)
+    end
   end
 
   # Asks for a valid numeric guess within the range, re-prompting otherwise.

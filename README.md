@@ -93,6 +93,46 @@ Tests run automatically on every push and pull request via [GitHub Actions](.git
 
 Running the suite also generates a test coverage report with [SimpleCov](https://github.com/simplecov-ruby/simplecov) in `coverage/index.html`.
 
+### How the specs are organized
+
+Two complementary levels:
+
+- **Unit specs** (`round_spec.rb`, `console_menu_spec.rb`, `player_spec.rb`, `i18n_spec.rb`, …) — test one class in isolation: build it directly, feed canned input, assert on the returned value or printed output.
+- **End-to-end specs** (`game_spec.rb`) — run the whole game through `Game#start` to verify that everything is wired correctly. Rules already covered by unit specs are not repeated here.
+
+A few RSpec building blocks used throughout:
+
+- `subject(:menu)` — the object under test. Each example gets its own fresh instance: nothing leaks from one test to the next.
+- `let(:title) { 'Main menu:' }` — a named test value. Writing it once at the top makes it available in every example, and any `context` can override it for its own examples only:
+
+  ```ruby
+  let(:options) { { play: 'Play', quit: 'Quit' } }   # default for all tests
+
+  context 'with string keys' do
+    let(:options) { { 'easy' => 'Easy', 'hard' => 'Hard' } }   # this group only
+
+    it 'returns the chosen string key by menu number' do
+      feed('2')
+
+      expect(menu.select).to eq('hard')
+    end
+  end
+  ```
+
+- `context` — groups examples sharing a condition (`with invalid guess input`).
+- `instance_double(Scoreboard, save: nil)` — a fake that verifies the real class actually has these methods; fails early if the interface drifts.
+- Helper methods like `feed('10', '42')` queue canned keyboard answers by stubbing `$stdin.gets`, so tests simulate a player without any real input.
+
+Example of a full unit spec:
+
+```ruby
+it 'does not count invalid entries as attempts' do
+  feed('abc', 101, 42) # two rejected entries, only "42" counts
+
+  expect(round.play).to have_attributes(attempts: 1)
+end
+```
+
 ## Lint
 
 Code style is checked with [RuboCop](https://rubocop.org) (plus [rubocop-rspec](https://github.com/rubocop/rubocop-rspec) for the specs), configured in `.rubocop.yml`:
